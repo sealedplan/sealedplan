@@ -425,8 +425,14 @@ class SqliteStore:
         return Applied.model_validate(json.loads(row["body"])) if row else None
 
     def record_compensated(
-        self, compensated: Compensated, src: State, dst: State, actor: Principal, at: datetime
-    ) -> Event:
+        self,
+        compensated: Compensated,
+        src: State | None,
+        dst: State | None,
+        actor: Principal,
+        at: datetime,
+    ) -> Event | None:
+        """Store a compensation record; move the plan unless ``dst`` is None (``skipped``)."""
         with self._tx() as conn:
             conn.execute(
                 "INSERT INTO compensations (compensation_id, plan_hash, body) VALUES (?, ?, ?)",
@@ -436,15 +442,10 @@ class SqliteStore:
                     _json(compensated.to_obj()),
                 ),
             )
-            return self._cas(
-                conn,
-                compensated.plan_hash,
-                src,
-                dst,
-                actor,
-                at,
-                {"outcome": compensated.outcome},
-            )
+            if src is None or dst is None:
+                return None
+            detail = {"outcome": compensated.outcome}
+            return self._cas(conn, compensated.plan_hash, src, dst, actor, at, detail)
 
     def compensations(self, plan_hash: str) -> list[Compensated]:
         rows = self._conn.execute(
