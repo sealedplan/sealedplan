@@ -25,6 +25,7 @@ sealedplan = { workspace = true }
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+src = ["python/sealedplan/src", "python/sealedplan/tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF", "N", "S", "PT", "TID"]
