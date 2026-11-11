@@ -1,0 +1,20 @@
+[project]
+name = "sealedplan"
+version = "0.1.0.dev0"
+description = "Reference runtime for the sealedplan plan/approve/apply/compensate contract for agent actions"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.11"
+dependencies = ["pydantic>=2.7,<3"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Programming Language :: Python :: 3",
+    "Typing :: Typed",
+]
+
+[project.scripts]
+sealedplan = "sealedplan.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.7.19,<0.8"]
+build-backend = "uv_build"
