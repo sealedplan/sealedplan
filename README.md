@@ -1,5 +1,3 @@
-# sealedplan
-
 [![CI](https://github.com/sealedplan/sealedplan/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/sealedplan/sealedplan/actions/workflows/ci.yml)
 [![Python 3.11 | 3.12 | 3.13](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-3776AB?logo=python&logoColor=white)](python/sealedplan/pyproject.toml)
 [![License: Apache-2.0](https://img.shields.io/github/license/sealedplan/sealedplan)](LICENSE)
@@ -8,6 +6,8 @@
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![mypy: strict](https://img.shields.io/badge/mypy-strict-1f5082)](https://mypy-lang.org/)
+
+# sealedplan
 
 **Approve the change, not the tool call.**
 
@@ -153,8 +153,20 @@ undoes the earlier steps in reverse order.
 A common way to wire this into an agent framework is to expose two tools:
 `propose_<action>`, which returns the plan's summary and hash, and `execute_plan(hash)`,
 which the agent calls once the plan is approved. The agent never gets a tool that
-changes the system directly. Adapters for MCP, LangGraph and the Claude Agent SDK are
-planned.
+changes the system directly.
+
+For MCP, [`sealedplan-mcp`](adapters/mcp) does this for you: it serves each registered
+action as an MCP tool that returns `input_required` until a person approves the plan,
+then drift-checks and applies on the client's retry.
+
+```python
+from sealedplan_mcp import create_server
+
+create_server(rt, agent=AGENT).run()
+```
+
+See [`examples/mcp_server`](examples/mcp_server/crm_server.py). Adapters for LangGraph
+and the Claude Agent SDK are planned.
 
 ### What the outcomes mean
 
@@ -212,7 +224,7 @@ To write your own action, see
 | [`docs/prior-art.md`](docs/prior-art.md) | Related work and how this differs. |
 | [`python/sealedplan`](python/sealedplan) | Reference runtime (Python 3.11+): core, SQLite store, CLI approver, reference actions. |
 | [`examples/`](examples) | Runnable examples. |
-| `adapters/` | MCP, LangGraph, Claude Agent SDK adapters (planned). |
+| [`adapters/mcp`](adapters/mcp) | MCP server adapter (`sealedplan-mcp`). LangGraph and Claude Agent SDK adapters are planned. |
 
 Status: early draft. Expect breaking changes.
 
