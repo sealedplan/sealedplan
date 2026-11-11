@@ -1,5 +1,14 @@
 # sealedplan
 
+[![CI](https://github.com/sealedplan/sealedplan/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/sealedplan/sealedplan/actions/workflows/ci.yml)
+[![Python 3.11 | 3.12 | 3.13](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-3776AB?logo=python&logoColor=white)](python/sealedplan/pyproject.toml)
+[![License: Apache-2.0](https://img.shields.io/github/license/sealedplan/sealedplan)](LICENSE)
+[![Spec: v0.1 draft](https://img.shields.io/badge/spec-v0.1%20draft-orange)](spec/SPEC.md)
+[![Status: pre-alpha](https://img.shields.io/badge/status-pre--alpha-lightgrey)](#repository)
+[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![mypy: strict](https://img.shields.io/badge/mypy-strict-1f5082)](https://mypy-lang.org/)
+
 **Approve the change, not the tool call.**
 
 ## The problem
