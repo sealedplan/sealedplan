@@ -1,0 +1,8 @@
+# Default rules, minus the local virtualenv: it is git-ignored and holds third-party
+# code (cryptography, PyJWT) whose key-handling sources trip the generic rules.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "local virtualenv"
+paths = ['''(^|/)\.venv/''']

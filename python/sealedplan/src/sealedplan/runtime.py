@@ -6,6 +6,7 @@ import uuid
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
+from types import MappingProxyType
 from typing import Any
 
 from sealedplan.actions import (
@@ -115,6 +116,10 @@ class Runtime:
             if bound.spec.name in self._actions:
                 raise SealedPlanError(f"action {bound.spec.name} is already registered")
             self._actions[bound.spec.name] = bound
+
+    def actions(self) -> Mapping[str, BoundAction]:
+        """The registered actions, by name (read-only)."""
+        return MappingProxyType(self._actions)
 
     def _action(self, name: str) -> BoundAction:
         try:

@@ -3,7 +3,7 @@ name = "sealedplan-workspace"
 version = "0.0.0"
 description = "Development workspace for the sealedplan monorepo"
 requires-python = ">=3.11"
-dependencies = ["sealedplan"]
+dependencies = ["sealedplan", "sealedplan-mcp"]
 
 [dependency-groups]
 dev = [
@@ -17,15 +17,16 @@ dev = [
 package = false
 
 [tool.uv.workspace]
-members = ["python/sealedplan"]
+members = ["python/sealedplan", "adapters/mcp"]
 
 [tool.uv.sources]
 sealedplan = { workspace = true }
+sealedplan-mcp = { workspace = true }
 
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-src = ["python/sealedplan/src", "python/sealedplan/tests"]
+src = ["python/sealedplan/src", "python/sealedplan/tests", "adapters/mcp/src", "adapters/mcp/tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF", "N", "S", "PT", "TID"]
@@ -38,7 +39,13 @@ ignore = ["S101"]
 strict = true
 python_version = "3.11"
 plugins = ["pydantic.mypy"]
-files = ["python/sealedplan/src", "python/sealedplan/tests", "examples"]
+files = [
+    "python/sealedplan/src",
+    "python/sealedplan/tests",
+    "adapters/mcp/src",
+    "adapters/mcp/tests",
+    "examples",
+]
 
 [tool.pydantic-mypy]
 init_forbid_extra = true
@@ -46,5 +53,5 @@ init_typed = true
 warn_required_dynamic_aliases = true
 
 [tool.pytest.ini_options]
-testpaths = ["python/sealedplan/tests"]
+testpaths = ["python/sealedplan/tests", "adapters/mcp/tests"]
 addopts = "-q --strict-markers"

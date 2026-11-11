@@ -14,3 +14,6 @@ build/
 *.sqlite3
 *.db
 .env
+
+# Local planning notes, kept out of git
+docs/roadmap.md
