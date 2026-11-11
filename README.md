@@ -1,16 +1,46 @@
 # sealedplan
 
-An open contract for **plan → approve → apply → compensate** on agent actions.
+**Approve the change, not the tool call.**
 
-Agents increasingly change real systems: Kubernetes, Terraform, SQL, SaaS APIs. Most
-safeguards approve a raw tool call. sealedplan instead has an action describe its own
-side effects as a **plan** before it runs. The plan comes from the target system's own
-dry-run and includes a diff, preconditions, blast radius and an undo strategy. The flow:
+## The problem
 
-1. The approval is bound to the plan's hash.
-2. Before applying, the runtime re-checks the preconditions. If the world changed since
-   approval, it refuses to apply, like Terraform does with a stale saved plan.
-3. If a later step fails, earlier steps are compensated.
+Agents now change real systems: databases, Kubernetes, Terraform, SaaS APIs. The usual
+safeguard is a prompt such as *"The agent wants to call `terraform apply`. Allow?"* That
+approval protects less than it seems:
+
+- **You approve the agent's words, not the effect.** The prompt shows the tool name and
+  the arguments the agent chose. It doesn't show which resources will be destroyed, what
+  a row holds now, or how many users a change affects.
+- **Nothing binds the "yes" to what runs.** After approval, the agent can retry with
+  different arguments, or the plan can be regenerated. The approval still counts.
+- **The world moves between approval and execution.** Someone edits the row, or a deploy
+  changes the cluster. The approved change then runs anyway and silently overwrites their
+  work.
+- **There's no reliable undo.** When step 3 of a run fails, steps 1 and 2 stay half-done.
+- **Every call asks, so people stop reading.** Approving a harmless read and a database
+  drop look the same, and soon both get a reflexive "yes".
+
+## What sealedplan does
+
+The person approves a **plan** of what will actually happen, and only that plan, in
+that world, can run.
+
+- **See what will really happen.** The plan comes from the target system itself,
+  through its own dry-run or a read of the current state, not from the agent. It shows
+  before and after, blast radius, and how to undo the change.
+- **The approval is sealed to the plan.** The approval names the plan's hash. If the
+  plan changes by one byte, it needs a new approval.
+- **A stale approval writes nothing.** Just before applying, the runtime checks that the
+  system still looks as it did when the person approved. If it doesn't, the result is
+  `DRIFTED` and nothing is written, like Terraform with a stale saved plan.
+- **Undo is built in, and safe.** Every plan carries its undo. Undo refuses to overwrite
+  a change someone made afterwards, and a failed multi-step run undoes its earlier steps.
+- **People only where it matters.** Policy looks at the plan's effect and risk. It
+  approves low-risk reversible changes automatically, asks one person for risky ones and
+  two people for destructive ones.
+
+sealedplan does not replace human judgment. It makes a person's approval mean exactly
+what they saw, and only while it is still true.
 
 This is **not** a new protocol and **not** a gateway. It is one protocol-neutral
 contract with bindings for MCP and A2A, plus a reference runtime.
@@ -19,20 +49,7 @@ contract with bindings for MCP and A2A, plus a reference runtime.
 
 There are three parties. Only the action touches the target system.
 
-```
-   agent                     runtime + action                    person
-   ─────                     ────────────────                    ──────
-1. propose(action, params) ─▶ action.plan(): read the system,
-                              describe the change, change nothing
-                              policy: auto, approve, two_person or deny
-                              plan stored as PENDING_APPROVAL ──▶ 2. reads the plan,
-                                                                     approves its hash
-3. execute(plan_hash) ──────▶ re-check preconditions
-                              ├─ changed since approval → DRIFTED, nothing written
-                              └─ unchanged → action.apply() → APPLIED
-4. compensate(plan_hash) ───▶ action.compensate(), unless someone
-   (or a later step failed)   changed it since → COMPENSATED or conflict
-```
+![The agent proposes, the runtime plans and policy decides, a person approves the plan hash, the agent executes after a precondition re-check, and compensate undoes it](docs/images/flow.png)
 
 - **An action** is a class that knows one kind of change on one system, for example
   "update a row" or "scale a deployment". It answers four questions: what would this
