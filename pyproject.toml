@@ -12,6 +12,8 @@ dev = [
     "ruff>=0.6",
     "mypy>=1.11",
 ]
+# Opt in with `uv sync --group agent-sdk`; only examples/agent_sdk needs it.
+agent-sdk = ["claude-agent-sdk>=0.2.187,<0.3"]
 
 [tool.uv]
 package = false
@@ -46,6 +48,11 @@ files = [
     "adapters/mcp/tests",
     "examples",
 ]
+
+# Installed only with the agent-sdk group; without it, examples/agent_sdk sees Any.
+[[tool.mypy.overrides]]
+module = ["claude_agent_sdk", "claude_agent_sdk.*"]
+ignore_missing_imports = true
 
 [tool.pydantic-mypy]
 init_forbid_extra = true
