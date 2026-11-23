@@ -165,8 +165,9 @@ from sealedplan_mcp import create_server
 create_server(rt, agent=AGENT).run()
 ```
 
-See [`examples/mcp_server`](examples/mcp_server/crm_server.py). Adapters for LangGraph
-and the Claude Agent SDK are planned.
+See [`examples/mcp_server`](examples/mcp_server/crm_server.py), and
+[`examples/agent_sdk`](examples/agent_sdk/crm_assistant.py) for a Claude Agent SDK agent
+that uses it. A LangGraph adapter is planned.
 
 ### What the outcomes mean
 
@@ -224,7 +225,7 @@ To write your own action, see
 | [`docs/prior-art.md`](docs/prior-art.md) | Related work and how this differs. |
 | [`python/sealedplan`](python/sealedplan) | Reference runtime (Python 3.11+): core, SQLite store, CLI approver, reference actions. |
 | [`examples/`](examples) | Runnable examples. |
-| [`adapters/mcp`](adapters/mcp) | MCP server adapter (`sealedplan-mcp`). LangGraph and Claude Agent SDK adapters are planned. |
+| [`adapters/mcp`](adapters/mcp) | MCP server adapter (`sealedplan-mcp`). A LangGraph adapter is planned. |
 
 Status: early draft. Expect breaking changes.
 

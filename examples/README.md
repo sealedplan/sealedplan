@@ -3,13 +3,16 @@
 Run each one from the repository root after `uv sync`. They need nothing beyond
 the `sealedplan` packages and Python's standard library (`mcp_server/` also uses the
 MCP SDK, which `sealedplan-mcp` brings in), and the test suite runs them so they stay
-working.
+working. `agent_sdk/` is the exception: it calls a real Claude model, so it needs the
+optional `agent-sdk` dependency group and a Claude login, and the tests cover only the
+parts that need no model.
 
 | Example | What it shows |
 |---|---|
 | [`sql_agent/`](sql_agent) | An agent that edits customer records and a person who approves each change with the `sealedplan` CLI. They run as two processes that share only a plan store. Covers approval, drift and undo. |
 | [`custom_action/`](custom_action) | Writing your own action. A feature-flag service in one file, with auto-approval for low-risk changes, a person's approval for risky ones, drift and undo. |
 | [`mcp_server/`](mcp_server) | The SQL action served as an MCP tool. The call waits (`input_required`) until a person approves with the CLI, then applies; an explicit plan-then-apply call drifts and writes nothing. |
+| [`agent_sdk/`](agent_sdk) | A Claude agent built on the Claude Agent SDK, whose only tool is that MCP server. An `Elicitation` hook holds the call open until a person approves the plan with the CLI, and Claude Code's retry then applies it. Costs a few cents a run. |
 
 ```bash
 uv run python examples/sql_agent/crm_agent.py demo
@@ -22,3 +25,14 @@ uv run python examples/custom_action/feature_flags.py
 ```bash
 uv run python examples/mcp_server/crm_server.py demo
 ```
+
+```bash
+uv sync --group agent-sdk
+```
+
+```bash
+uv run python examples/agent_sdk/crm_assistant.py --approve-as dana
+```
+
+Leave out `--approve-as` to approve from another terminal yourself; the script prints the
+command.
