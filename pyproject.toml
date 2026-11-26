@@ -3,7 +3,7 @@ name = "sealedplan-workspace"
 version = "0.0.0"
 description = "Development workspace for the sealedplan monorepo"
 requires-python = ">=3.11"
-dependencies = ["sealedplan", "sealedplan-mcp", "sealedplan-langgraph"]
+dependencies = ["sealedplan", "sealedplan-mcp", "sealedplan-langgraph", "sealedplan-openai-agents"]
 
 [dependency-groups]
 dev = [
@@ -21,17 +21,18 @@ agent-sdk = ["claude-agent-sdk>=0.2.187,<0.3"]
 package = false
 
 [tool.uv.workspace]
-members = ["python/sealedplan", "adapters/mcp", "adapters/langgraph"]
+members = ["python/sealedplan", "adapters/mcp", "adapters/langgraph", "adapters/openai-agents"]
 
 [tool.uv.sources]
 sealedplan = { workspace = true }
 sealedplan-mcp = { workspace = true }
 sealedplan-langgraph = { workspace = true }
+sealedplan-openai-agents = { workspace = true }
 
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-src = ["python/sealedplan/src", "python/sealedplan/tests", "adapters/mcp/src", "adapters/mcp/tests", "adapters/langgraph/src", "adapters/langgraph/tests"]
+src = ["python/sealedplan/src", "python/sealedplan/tests", "adapters/mcp/src", "adapters/mcp/tests", "adapters/langgraph/src", "adapters/langgraph/tests", "adapters/openai-agents/src", "adapters/openai-agents/tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF", "N", "S", "PT", "TID"]
@@ -51,6 +52,8 @@ files = [
     "adapters/mcp/tests",
     "adapters/langgraph/src",
     "adapters/langgraph/tests",
+    "adapters/openai-agents/src",
+    "adapters/openai-agents/tests",
     "examples",
 ]
 
@@ -70,7 +73,7 @@ init_typed = true
 warn_required_dynamic_aliases = true
 
 [tool.pytest.ini_options]
-testpaths = ["python/sealedplan/tests", "adapters/mcp/tests", "adapters/langgraph/tests"]
+testpaths = ["python/sealedplan/tests", "adapters/mcp/tests", "adapters/langgraph/tests", "adapters/openai-agents/tests"]
 filterwarnings = [
     # langsmith (via langgraph) calls a function Python 3.14 deprecates; not ours to fix.
     "ignore:'asyncio.iscoroutinefunction' is deprecated:DeprecationWarning:langsmith",

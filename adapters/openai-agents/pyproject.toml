@@ -1,0 +1,17 @@
+[project]
+name = "sealedplan-openai-agents"
+version = "0.1.0.dev0"
+description = "Gate OpenAI Agents SDK tools on sealedplan: the run pauses on the plan, approval comes from the store"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.11"
+dependencies = ["sealedplan", "openai-agents>=0.26,<0.27"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Programming Language :: Python :: 3",
+    "Typing :: Typed",
+]
+
+[build-system]
+requires = ["uv_build>=0.7.19,<0.8"]
+build-backend = "uv_build"

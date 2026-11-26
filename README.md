@@ -173,6 +173,10 @@ For LangGraph, [`sealedplan-langgraph`](adapters/langgraph) turns each action in
 When a person must approve, the graph pauses with the plan as the interrupt value, and
 resumes only for that plan's hash.
 
+For the OpenAI Agents SDK, [`sealedplan-openai-agents`](adapters/openai-agents) does the
+same with the SDK's tool approvals. The run stops on the call, and `resolve_approvals`
+lets it continue only once the plan is approved in the store.
+
 ### What the outcomes mean
 
 | State | Meaning | What to do |
@@ -231,6 +235,7 @@ To write your own action, see
 | [`examples/`](examples) | Runnable examples. |
 | [`adapters/mcp`](adapters/mcp) | MCP server adapter (`sealedplan-mcp`). |
 | [`adapters/langgraph`](adapters/langgraph) | LangGraph tools (`sealedplan-langgraph`). |
+| [`adapters/openai-agents`](adapters/openai-agents) | OpenAI Agents SDK tools (`sealedplan-openai-agents`). |
 
 Status: early draft. Expect breaking changes.
 
