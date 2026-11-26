@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/sealedplan/sealedplan/blob/main/spec/schemas/event.schema.json",
+  "title": "sealedplan v0.1 Event",
+  "description": "SPEC §5.6. One state transition. from is absent on the first event of a plan.",
+  "type": "object",
+  "required": ["spec_version", "event_id", "plan_hash", "to", "at", "actor"],
+  "additionalProperties": false,
+  "properties": {
+    "spec_version": { "$ref": "common.schema.json#/$defs/spec_version" },
+    "event_id": { "type": "string" },
+    "plan_hash": { "$ref": "common.schema.json#/$defs/digest" },
+    "from": { "$ref": "common.schema.json#/$defs/state" },
+    "to": { "$ref": "common.schema.json#/$defs/state" },
+    "at": { "$ref": "common.schema.json#/$defs/timestamp" },
+    "actor": { "$ref": "common.schema.json#/$defs/principal" },
+    "detail": { "$ref": "common.schema.json#/$defs/object" },
+    "prev": {
+      "description": "Digest of the previous event of this plan (§5.6).",
+      "$ref": "common.schema.json#/$defs/digest"
+    }
+  }
+}

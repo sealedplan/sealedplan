@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/sealedplan/sealedplan/blob/main/spec/schemas/compensated.schema.json",
+  "title": "sealedplan v0.1 Compensated",
+  "description": "SPEC §5.5.",
+  "type": "object",
+  "required": [
+    "spec_version",
+    "compensation_id",
+    "applied_id",
+    "plan_hash",
+    "reason",
+    "outcome",
+    "started_at",
+    "finished_at"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "spec_version": { "$ref": "common.schema.json#/$defs/spec_version" },
+    "compensation_id": { "type": "string" },
+    "applied_id": { "type": "string" },
+    "plan_hash": { "$ref": "common.schema.json#/$defs/digest" },
+    "reason": { "enum": ["step_failed", "manual", "policy"] },
+    "outcome": { "enum": ["succeeded", "failed", "skipped", "conflict", "unknown"] },
+    "started_at": { "$ref": "common.schema.json#/$defs/timestamp" },
+    "finished_at": { "$ref": "common.schema.json#/$defs/timestamp" },
+    "trigger": {
+      "type": "object",
+      "required": ["run_id", "failed_step"],
+      "additionalProperties": false,
+      "properties": {
+        "run_id": { "type": "string" },
+        "failed_step": { "$ref": "common.schema.json#/$defs/safe_integer", "minimum": 0 }
+      }
+    },
+    "error": { "type": "string" }
+  }
+}

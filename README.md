@@ -221,7 +221,7 @@ To write your own action, see
 
 | Path | What |
 |---|---|
-| [`spec/SPEC.md`](spec/SPEC.md) | The contract (v0.1 draft). Usable without any of this code. |
+| [`spec/SPEC.md`](spec/SPEC.md) | The contract (v0.1 draft). Usable without any of this code: [JSON Schemas](spec/schemas) for every object and [hash test vectors](spec/test-vectors/plans.json) let another implementation check itself. |
 | [`docs/prior-art.md`](docs/prior-art.md) | Related work and how this differs. |
 | [`python/sealedplan`](python/sealedplan) | Reference runtime (Python 3.11+): core, SQLite store, CLI approver, reference actions. |
 | [`examples/`](examples) | Runnable examples. |

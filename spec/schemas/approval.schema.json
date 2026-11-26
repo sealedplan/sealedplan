@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/sealedplan/sealedplan/blob/main/spec/schemas/approval.schema.json",
+  "title": "sealedplan v0.1 Approval",
+  "description": "SPEC §5.3. A schema cannot check rules 1, 3, 5, 6 and 8; the runtime checks those.",
+  "type": "object",
+  "required": [
+    "spec_version",
+    "approval_id",
+    "plan_hash",
+    "decision",
+    "approver",
+    "method",
+    "scope",
+    "issued_at",
+    "expires_at"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "spec_version": { "$ref": "common.schema.json#/$defs/spec_version" },
+    "approval_id": { "type": "string" },
+    "plan_hash": { "$ref": "common.schema.json#/$defs/digest" },
+    "decision": { "enum": ["approve", "reject"] },
+    "approver": { "$ref": "common.schema.json#/$defs/principal" },
+    "method": { "enum": ["cli", "url", "webhook", "chat", "signed", "policy"] },
+    "scope": {
+      "type": "object",
+      "required": ["uses"],
+      "additionalProperties": false,
+      "properties": {
+        "uses": { "const": 1 },
+        "apply_by": {
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/principal" }
+        }
+      }
+    },
+    "comment": { "type": "string" },
+    "issued_at": { "$ref": "common.schema.json#/$defs/timestamp" },
+    "expires_at": { "$ref": "common.schema.json#/$defs/timestamp" },
+    "signature": {
+      "description": "Detached JWS over the canonical approval without signature (§5.3 rule 8).",
+      "type": "object",
+      "required": ["alg", "kid", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "alg": { "type": "string" },
+        "kid": { "type": "string" },
+        "value": { "type": "string" }
+      }
+    }
+  }
+}
