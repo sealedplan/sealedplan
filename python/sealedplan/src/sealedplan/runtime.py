@@ -582,7 +582,7 @@ class Runtime:
                 self.store.transition(
                     h, State.APPLYING, State.UNKNOWN, self.identity, now, {"reason": "restart"}
                 )
-            else:  # COMPENSATING: see the note in sealedplan.state
+            else:  # COMPENSATING: escalate, never compensate again blindly (§7.2)
                 applied = self.store.applied(h)
                 assert applied is not None
                 lost = Compensated(

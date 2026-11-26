@@ -45,10 +45,10 @@ def base(**overrides: Any) -> dict[str, Any]:
         ],
         "preconditions": [
             {
-                "id": "deploy-version",
+                "id": "deploy-generation",
                 "resource": DEPLOY,
                 "kind": "version",
-                "expect": "48213977",
+                "expect": "7",
                 "enforcement": "atomic",
             }
         ],
