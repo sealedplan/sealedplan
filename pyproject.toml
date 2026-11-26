@@ -11,6 +11,7 @@ dev = [
     "hypothesis>=6.100",
     "ruff>=0.6",
     "mypy>=1.11",
+    "jsonschema>=4.26",  # validates runtime output against spec/schemas
 ]
 # Opt in with `uv sync --group agent-sdk`; only examples/agent_sdk needs it.
 agent-sdk = ["claude-agent-sdk>=0.2.187,<0.3"]
@@ -52,6 +53,11 @@ files = [
 # Installed only with the agent-sdk group; without it, examples/agent_sdk sees Any.
 [[tool.mypy.overrides]]
 module = ["claude_agent_sdk", "claude_agent_sdk.*"]
+ignore_missing_imports = true
+
+# jsonschema ships no type hints; only the spec artifact test uses it.
+[[tool.mypy.overrides]]
+module = ["jsonschema", "jsonschema.*"]
 ignore_missing_imports = true
 
 [tool.pydantic-mypy]

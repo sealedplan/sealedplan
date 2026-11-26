@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/sealedplan/sealedplan/blob/main/spec/schemas/common.schema.json",
+  "title": "sealedplan v0.1 shared definitions",
+  "description": "Definitions used by more than one object (SPEC §5, §6.2).",
+  "$defs": {
+    "spec_version": { "const": "0.1" },
+    "timestamp": {
+      "description": "RFC 3339, UTC, whole seconds, Z suffix (§5).",
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "safe_integer": {
+      "description": "The only numbers allowed (§6.2 rule 1). Encode anything else as a string.",
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "value": {
+      "description": "Free-form JSON within the §6.2 value restrictions. null is allowed here (§6.2 rule 3).",
+      "anyOf": [
+        { "type": "null" },
+        { "type": "boolean" },
+        { "type": "string" },
+        { "$ref": "#/$defs/safe_integer" },
+        { "type": "array", "items": { "$ref": "#/$defs/value" } },
+        { "type": "object", "additionalProperties": { "$ref": "#/$defs/value" } }
+      ]
+    },
+    "object": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/value" }
+    },
+    "principal": {
+      "description": "§5.1. Compare by id and issuer together, never by id alone.",
+      "type": "object",
+      "required": ["id", "issuer", "kind"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "issuer": { "type": "string" },
+        "kind": { "enum": ["agent", "human", "service"] }
+      }
+    },
+    "resource": {
+      "type": "object",
+      "required": ["type", "id"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "type": "string" },
+        "id": { "type": "string" }
+      }
+    },
+    "json_pointer": {
+      "type": "string",
+      "pattern": "^(/.*)?$"
+    },
+    "precondition": {
+      "description": "§5.2.3.",
+      "type": "object",
+      "required": ["id", "resource", "kind", "enforcement"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "resource": { "$ref": "#/$defs/resource" },
+        "kind": { "enum": ["version", "fingerprint", "exists", "absent"] },
+        "expect": { "type": "string" },
+        "select": { "type": "array", "items": { "$ref": "#/$defs/json_pointer" }, "minItems": 1 },
+        "enforcement": { "enum": ["atomic", "check_then_act"] }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "version" } } },
+          "then": { "required": ["expect"], "not": { "required": ["select"] } }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "fingerprint" } } },
+          "then": {
+            "required": ["expect", "select"],
+            "properties": { "expect": { "$ref": "#/$defs/digest" } }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "enum": ["exists", "absent"] } } },
+          "then": { "allOf": [{ "not": { "required": ["expect"] } }, { "not": { "required": ["select"] } }] }
+        }
+      ]
+    },
+    "state": {
+      "description": "§7.1.",
+      "enum": [
+        "PLANNED",
+        "PENDING_APPROVAL",
+        "APPROVED",
+        "DENIED",
+        "REJECTED",
+        "EXPIRED",
+        "DRIFTED",
+        "APPLYING",
+        "APPLIED",
+        "FAILED",
+        "UNKNOWN",
+        "COMPENSATING",
+        "COMPENSATED",
+        "COMPENSATION_FAILED"
+      ]
+    }
+  }
+}

@@ -1,0 +1,434 @@
+{
+  "description": "SPEC §6.4 test vectors. For each valid case, the JCS form of plan without plan_hash MUST equal canonical (as UTF-8), its SHA-256 MUST equal plan_hash, and a receiver MUST accept the plan. A receiver MUST reject the text of every invalid case.",
+  "spec_version": "0.1",
+  "valid": [
+    {
+      "name": "spec-example",
+      "description": "The plan in SPEC §5.2.",
+      "canonical": "{\"action\":{\"name\":\"k8s.scale_deployment\",\"provider\":\"sealedplan-k8s\",\"version\":\"1.0.0\"},\"blast_radius\":{\"resources\":1,\"scopes\":[\"k8s://prod-cluster/shop\"]},\"changes\":[{\"after\":{\"spec\":{\"replicas\":6}},\"before\":{\"spec\":{\"replicas\":3}},\"op\":\"update\",\"resource\":{\"id\":\"k8s://prod-cluster/shop/checkout\",\"type\":\"apps/v1/Deployment\"}}],\"compensation\":{\"params\":{\"name\":\"checkout\",\"namespace\":\"shop\",\"replicas\":3},\"strategy\":\"restore\",\"summary\":\"Scale shop/checkout back to 3 replicas\"},\"created_at\":\"2026-11-09T14:03:00Z\",\"effect\":\"REVERSIBLE\",\"evidence\":[{\"digest\":\"sha256:f148c8b7f199d38632c676e75006b6a93d5fd4a62f3ea4fdc4e19814c8301345\",\"kind\":\"k8s.server-dry-run\",\"media_type\":\"application/json\"}],\"expires_at\":\"2026-11-09T14:33:00Z\",\"idempotency_key\":\"incident-4711-scale-checkout\",\"params\":{\"name\":\"checkout\",\"namespace\":\"shop\",\"replicas\":6},\"preconditions\":[{\"enforcement\":\"atomic\",\"expect\":\"48213977\",\"id\":\"deploy-version\",\"kind\":\"version\",\"resource\":{\"id\":\"k8s://prod-cluster/shop/checkout\",\"type\":\"apps/v1/Deployment\"}}],\"principal\":{\"agent\":{\"id\":\"agent:incident-bot\",\"issuer\":\"https://idp.example.invalid\",\"kind\":\"agent\"},\"sponsor\":{\"id\":\"alice\",\"issuer\":\"https://idp.example.invalid\",\"kind\":\"human\"}},\"risk\":{\"level\":\"medium\",\"reasons\":[\"production namespace\"]},\"spec_version\":\"0.1\",\"summary\":\"Scale shop/checkout from 3 to 6 replicas\"}",
+      "plan_hash": "sha256:0953a597cc1706e48c66d3552f08a7804b29eb8210eddbb5e07e06c350d5db57",
+      "plan": {
+        "spec_version": "0.1",
+        "action": {
+          "name": "k8s.scale_deployment",
+          "version": "1.0.0",
+          "provider": "sealedplan-k8s"
+        },
+        "params": {
+          "namespace": "shop",
+          "name": "checkout",
+          "replicas": 6
+        },
+        "effect": "REVERSIBLE",
+        "risk": {
+          "level": "medium",
+          "reasons": [
+            "production namespace"
+          ]
+        },
+        "summary": "Scale shop/checkout from 3 to 6 replicas",
+        "changes": [
+          {
+            "resource": {
+              "type": "apps/v1/Deployment",
+              "id": "k8s://prod-cluster/shop/checkout"
+            },
+            "op": "update",
+            "before": {
+              "spec": {
+                "replicas": 3
+              }
+            },
+            "after": {
+              "spec": {
+                "replicas": 6
+              }
+            }
+          }
+        ],
+        "preconditions": [
+          {
+            "id": "deploy-version",
+            "resource": {
+              "type": "apps/v1/Deployment",
+              "id": "k8s://prod-cluster/shop/checkout"
+            },
+            "kind": "version",
+            "expect": "48213977",
+            "enforcement": "atomic"
+          }
+        ],
+        "blast_radius": {
+          "resources": 1,
+          "scopes": [
+            "k8s://prod-cluster/shop"
+          ]
+        },
+        "compensation": {
+          "strategy": "restore",
+          "summary": "Scale shop/checkout back to 3 replicas",
+          "params": {
+            "namespace": "shop",
+            "name": "checkout",
+            "replicas": 3
+          }
+        },
+        "idempotency_key": "incident-4711-scale-checkout",
+        "principal": {
+          "agent": {
+            "id": "agent:incident-bot",
+            "issuer": "https://idp.example.invalid",
+            "kind": "agent"
+          },
+          "sponsor": {
+            "id": "alice",
+            "issuer": "https://idp.example.invalid",
+            "kind": "human"
+          }
+        },
+        "evidence": [
+          {
+            "kind": "k8s.server-dry-run",
+            "media_type": "application/json",
+            "digest": "sha256:f148c8b7f199d38632c676e75006b6a93d5fd4a62f3ea4fdc4e19814c8301345"
+          }
+        ],
+        "created_at": "2026-11-09T14:03:00Z",
+        "expires_at": "2026-11-09T14:33:00Z",
+        "plan_hash": "sha256:0953a597cc1706e48c66d3552f08a7804b29eb8210eddbb5e07e06c350d5db57"
+      }
+    },
+    {
+      "name": "minimal-read-only",
+      "description": "Only the required fields; empty changes and preconditions.",
+      "canonical": "{\"action\":{\"name\":\"test.echo\"},\"changes\":[],\"created_at\":\"2026-11-09T14:03:00Z\",\"effect\":\"READ_ONLY\",\"expires_at\":\"2026-11-09T14:33:00Z\",\"idempotency_key\":\"k\",\"params\":{},\"preconditions\":[],\"principal\":{\"agent\":{\"id\":\"agent:incident-bot\",\"issuer\":\"https://idp.example.invalid\",\"kind\":\"agent\"}},\"risk\":{\"level\":\"low\"},\"spec_version\":\"0.1\",\"summary\":\"Read only\"}",
+      "plan_hash": "sha256:2c56d8a204627c0eda7d8060c787d3cbda9d5ce79882f3c42ada63f8d30852a4",
+      "plan": {
+        "spec_version": "0.1",
+        "action": {
+          "name": "test.echo"
+        },
+        "params": {},
+        "effect": "READ_ONLY",
+        "risk": {
+          "level": "low"
+        },
+        "summary": "Read only",
+        "changes": [],
+        "preconditions": [],
+        "idempotency_key": "k",
+        "principal": {
+          "agent": {
+            "id": "agent:incident-bot",
+            "issuer": "https://idp.example.invalid",
+            "kind": "agent"
+          }
+        },
+        "created_at": "2026-11-09T14:03:00Z",
+        "expires_at": "2026-11-09T14:33:00Z",
+        "plan_hash": "sha256:2c56d8a204627c0eda7d8060c787d3cbda9d5ce79882f3c42ada63f8d30852a4"
+      }
+    },
+    {
+      "name": "key-order-utf16",
+      "description": "Object keys sort by UTF-16 code units (RFC 8785 §3.2.3), not code points: U+1F600 (surrogates D83D DE00) sorts before U+FF61.",
+      "canonical": "{\"action\":{\"name\":\"test.echo\"},\"changes\":[],\"created_at\":\"2026-11-09T14:03:00Z\",\"effect\":\"READ_ONLY\",\"expires_at\":\"2026-11-09T14:33:00Z\",\"idempotency_key\":\"k\",\"params\":{\"B\":7,\"a\":6,\"b\":5,\"é\":4,\"€\":3,\"😀\":2,\"｡\":1},\"preconditions\":[],\"principal\":{\"agent\":{\"id\":\"agent:incident-bot\",\"issuer\":\"https://idp.example.invalid\",\"kind\":\"agent\"}},\"risk\":{\"level\":\"low\"},\"spec_version\":\"0.1\",\"summary\":\"Read only\"}",
+      "plan_hash": "sha256:db22665a41fc62ac4e0383cc144bc4a60d89c6728cc3d5facce411bffaaaff4a",
+      "plan": {
+        "spec_version": "0.1",
+        "action": {
+          "name": "test.echo"
+        },
+        "params": {
+          "｡": 1,
+          "😀": 2,
+          "€": 3,
+          "é": 4,
+          "b": 5,
+          "a": 6,
+          "B": 7
+        },
+        "effect": "READ_ONLY",
+        "risk": {
+          "level": "low"
+        },
+        "summary": "Read only",
+        "changes": [],
+        "preconditions": [],
+        "idempotency_key": "k",
+        "principal": {
+          "agent": {
+            "id": "agent:incident-bot",
+            "issuer": "https://idp.example.invalid",
+            "kind": "agent"
+          }
+        },
+        "created_at": "2026-11-09T14:03:00Z",
+        "expires_at": "2026-11-09T14:33:00Z",
+        "plan_hash": "sha256:db22665a41fc62ac4e0383cc144bc4a60d89c6728cc3d5facce411bffaaaff4a"
+      }
+    },
+    {
+      "name": "string-escapes",
+      "description": "Only \\b \\t \\n \\f \\r \\\" \\\\ use short escapes; other controls are \\u00xx in lowercase hex; '/' and non-ASCII characters are written as-is.",
+      "canonical": "{\"action\":{\"name\":\"test.echo\"},\"changes\":[],\"created_at\":\"2026-11-09T14:03:00Z\",\"effect\":\"READ_ONLY\",\"expires_at\":\"2026-11-09T14:33:00Z\",\"idempotency_key\":\"k\",\"params\":{\"s\":\"a\\bb\\tc\\nd\\fe\\rf\\\"g\\\\h\\u0000i\\u001fj/klém😀\"},\"preconditions\":[],\"principal\":{\"agent\":{\"id\":\"agent:incident-bot\",\"issuer\":\"https://idp.example.invalid\",\"kind\":\"agent\"}},\"risk\":{\"level\":\"low\"},\"spec_version\":\"0.1\",\"summary\":\"Read only\"}",
+      "plan_hash": "sha256:5d5260952d18530dbe61e86959d29ff7c97eff7539bd157b7108c98369600a96",
+      "plan": {
+        "spec_version": "0.1",
+        "action": {
+          "name": "test.echo"
+        },
+        "params": {
+          "s": "a\bb\tc\nd\fe\rf\"g\\h\u0000i\u001fj/klém😀"
+        },
+        "effect": "READ_ONLY",
+        "risk": {
+          "level": "low"
+        },
+        "summary": "Read only",
+        "changes": [],
+        "preconditions": [],
+        "idempotency_key": "k",
+        "principal": {
+          "agent": {
+            "id": "agent:incident-bot",
+            "issuer": "https://idp.example.invalid",
+            "kind": "agent"
+          }
+        },
+        "created_at": "2026-11-09T14:03:00Z",
+        "expires_at": "2026-11-09T14:33:00Z",
+        "plan_hash": "sha256:5d5260952d18530dbe61e86959d29ff7c97eff7539bd157b7108c98369600a96"
+      }
+    },
+    {
+      "name": "integer-limits",
+      "description": "The largest and smallest allowed integers; bigger numbers and decimals are strings.",
+      "canonical": "{\"action\":{\"name\":\"test.echo\"},\"changes\":[],\"created_at\":\"2026-11-09T14:03:00Z\",\"effect\":\"READ_ONLY\",\"expires_at\":\"2026-11-09T14:33:00Z\",\"idempotency_key\":\"k\",\"params\":{\"big\":\"18446744073709551615\",\"decimal\":\"0.25\",\"max\":9007199254740991,\"min\":-9007199254740991,\"negative\":-1,\"zero\":0},\"preconditions\":[],\"principal\":{\"agent\":{\"id\":\"agent:incident-bot\",\"issuer\":\"https://idp.example.invalid\",\"kind\":\"agent\"}},\"risk\":{\"level\":\"low\"},\"spec_version\":\"0.1\",\"summary\":\"Read only\"}",
+      "plan_hash": "sha256:67654348dfffd9d0126c699fc5687a86d5aea80c48af36afaed357e030e8f1b7",
+      "plan": {
+        "spec_version": "0.1",
+        "action": {
+          "name": "test.echo"
+        },
+        "params": {
+          "max": 9007199254740991,
+          "min": -9007199254740991,
+          "zero": 0,
+          "negative": -1,
+          "big": "18446744073709551615",
+          "decimal": "0.25"
+        },
+        "effect": "READ_ONLY",
+        "risk": {
+          "level": "low"
+        },
+        "summary": "Read only",
+        "changes": [],
+        "preconditions": [],
+        "idempotency_key": "k",
+        "principal": {
+          "agent": {
+            "id": "agent:incident-bot",
+            "issuer": "https://idp.example.invalid",
+            "kind": "agent"
+          }
+        },
+        "created_at": "2026-11-09T14:03:00Z",
+        "expires_at": "2026-11-09T14:33:00Z",
+        "plan_hash": "sha256:67654348dfffd9d0126c699fc5687a86d5aea80c48af36afaed357e030e8f1b7"
+      }
+    },
+    {
+      "name": "null-and-empty",
+      "description": "null inside params and extensions is hashed as null; empty objects and arrays stay.",
+      "canonical": "{\"action\":{\"name\":\"test.echo\"},\"changes\":[],\"created_at\":\"2026-11-09T14:03:00Z\",\"effect\":\"READ_ONLY\",\"expires_at\":\"2026-11-09T14:33:00Z\",\"extensions\":{\"com.example.ticket\":{\"id\":\"T-1\",\"link\":null}},\"idempotency_key\":\"k\",\"params\":{\"empty_array\":[],\"empty_object\":{},\"nested\":[null,{\"x\":[]}],\"none\":null},\"preconditions\":[],\"principal\":{\"agent\":{\"id\":\"agent:incident-bot\",\"issuer\":\"https://idp.example.invalid\",\"kind\":\"agent\"}},\"risk\":{\"level\":\"low\"},\"spec_version\":\"0.1\",\"summary\":\"Read only\"}",
+      "plan_hash": "sha256:2215933ef9768ae0ddc3080bd82926808e8d53c9ba3477273b7339959677a604",
+      "plan": {
+        "spec_version": "0.1",
+        "action": {
+          "name": "test.echo"
+        },
+        "params": {
+          "none": null,
+          "empty_object": {},
+          "empty_array": [],
+          "nested": [
+            null,
+            {
+              "x": []
+            }
+          ]
+        },
+        "effect": "READ_ONLY",
+        "risk": {
+          "level": "low"
+        },
+        "summary": "Read only",
+        "changes": [],
+        "preconditions": [],
+        "idempotency_key": "k",
+        "principal": {
+          "agent": {
+            "id": "agent:incident-bot",
+            "issuer": "https://idp.example.invalid",
+            "kind": "agent"
+          }
+        },
+        "created_at": "2026-11-09T14:03:00Z",
+        "expires_at": "2026-11-09T14:33:00Z",
+        "extensions": {
+          "com.example.ticket": {
+            "id": "T-1",
+            "link": null
+          }
+        },
+        "plan_hash": "sha256:2215933ef9768ae0ddc3080bd82926808e8d53c9ba3477273b7339959677a604"
+      }
+    },
+    {
+      "name": "compensatable-run-step",
+      "description": "A semantic compensation with its own precondition, a fingerprint precondition, a sensitive field, and a parent run.",
+      "canonical": "{\"action\":{\"name\":\"crm.issue_credit\"},\"blast_radius\":{\"estimate\":false,\"resources\":1,\"scopes\":[\"crm://\"]},\"changes\":[{\"after\":{\"api_key\":\"ref:vault/acct-9\",\"balance\":\"135.00\"},\"before\":{\"api_key\":\"ref:vault/acct-9\",\"balance\":\"10.00\"},\"op\":\"update\",\"resource\":{\"id\":\"crm://acct-9\",\"type\":\"crm/Account\"},\"sensitive\":[\"/before/api_key\",\"/after/api_key\"]}],\"compensation\":{\"params\":{\"account\":\"acct-9\",\"amount\":\"-125.00\"},\"preconditions\":[{\"enforcement\":\"check_then_act\",\"id\":\"credit-exists\",\"kind\":\"exists\",\"resource\":{\"id\":\"crm://acct-9/credits/c-1\",\"type\":\"crm/Credit\"}}],\"strategy\":\"semantic\",\"summary\":\"Debit 125.00 EUR from acct-9\"},\"created_at\":\"2026-11-09T14:03:00Z\",\"effect\":\"COMPENSATABLE\",\"expires_at\":\"2026-11-09T14:33:00Z\",\"idempotency_key\":\"incident-4711-scale-checkout\",\"params\":{\"account\":\"acct-9\",\"amount\":\"125.00\",\"currency\":\"EUR\"},\"parent\":{\"run_id\":\"run-42\",\"step\":2},\"preconditions\":[{\"enforcement\":\"check_then_act\",\"expect\":\"sha256:6554a767d9b98b0cb0df5236c1e423c389ddc8e7a3bd4418d87a7deb51e8aa3e\",\"id\":\"balance\",\"kind\":\"fingerprint\",\"resource\":{\"id\":\"crm://acct-9\",\"type\":\"crm/Account\"},\"select\":[\"/balance\"]}],\"principal\":{\"agent\":{\"id\":\"agent:incident-bot\",\"issuer\":\"https://idp.example.invalid\",\"kind\":\"agent\"},\"sponsor\":{\"id\":\"alice\",\"issuer\":\"https://idp.example.invalid\",\"kind\":\"human\"}},\"risk\":{\"level\":\"high\",\"reasons\":[\"money\"]},\"spec_version\":\"0.1\",\"summary\":\"Credit 125.00 EUR to acct-9\"}",
+      "plan_hash": "sha256:4a29a8c583862171c5ba94e087a137dbc60cb0180f1455d2d112c7541a478b41",
+      "plan": {
+        "spec_version": "0.1",
+        "action": {
+          "name": "crm.issue_credit"
+        },
+        "params": {
+          "account": "acct-9",
+          "amount": "125.00",
+          "currency": "EUR"
+        },
+        "effect": "COMPENSATABLE",
+        "risk": {
+          "level": "high",
+          "reasons": [
+            "money"
+          ]
+        },
+        "summary": "Credit 125.00 EUR to acct-9",
+        "changes": [
+          {
+            "resource": {
+              "type": "crm/Account",
+              "id": "crm://acct-9"
+            },
+            "op": "update",
+            "before": {
+              "balance": "10.00",
+              "api_key": "ref:vault/acct-9"
+            },
+            "after": {
+              "balance": "135.00",
+              "api_key": "ref:vault/acct-9"
+            },
+            "sensitive": [
+              "/before/api_key",
+              "/after/api_key"
+            ]
+          }
+        ],
+        "preconditions": [
+          {
+            "id": "balance",
+            "resource": {
+              "type": "crm/Account",
+              "id": "crm://acct-9"
+            },
+            "kind": "fingerprint",
+            "expect": "sha256:6554a767d9b98b0cb0df5236c1e423c389ddc8e7a3bd4418d87a7deb51e8aa3e",
+            "select": [
+              "/balance"
+            ],
+            "enforcement": "check_then_act"
+          }
+        ],
+        "blast_radius": {
+          "resources": 1,
+          "scopes": [
+            "crm://"
+          ],
+          "estimate": false
+        },
+        "compensation": {
+          "strategy": "semantic",
+          "summary": "Debit 125.00 EUR from acct-9",
+          "params": {
+            "account": "acct-9",
+            "amount": "-125.00"
+          },
+          "preconditions": [
+            {
+              "id": "credit-exists",
+              "resource": {
+                "type": "crm/Credit",
+                "id": "crm://acct-9/credits/c-1"
+              },
+              "kind": "exists",
+              "enforcement": "check_then_act"
+            }
+          ]
+        },
+        "idempotency_key": "incident-4711-scale-checkout",
+        "principal": {
+          "agent": {
+            "id": "agent:incident-bot",
+            "issuer": "https://idp.example.invalid",
+            "kind": "agent"
+          },
+          "sponsor": {
+            "id": "alice",
+            "issuer": "https://idp.example.invalid",
+            "kind": "human"
+          }
+        },
+        "created_at": "2026-11-09T14:03:00Z",
+        "expires_at": "2026-11-09T14:33:00Z",
+        "parent": {
+          "run_id": "run-42",
+          "step": 2
+        },
+        "plan_hash": "sha256:4a29a8c583862171c5ba94e087a137dbc60cb0180f1455d2d112c7541a478b41"
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "hash-mismatch",
+      "reason": "plan_hash is for a different summary (§6.1)",
+      "text": "{\"spec_version\": \"0.1\", \"action\": {\"name\": \"k8s.scale_deployment\", \"version\": \"1.0.0\", \"provider\": \"sealedplan-k8s\"}, \"params\": {\"namespace\": \"shop\", \"name\": \"checkout\", \"replicas\": 6}, \"effect\": \"REVERSIBLE\", \"risk\": {\"level\": \"medium\", \"reasons\": [\"production namespace\"]}, \"summary\": \"Scale shop/checkout from 3 to 60 replicas\", \"changes\": [{\"resource\": {\"type\": \"apps/v1/Deployment\", \"id\": \"k8s://prod-cluster/shop/checkout\"}, \"op\": \"update\", \"before\": {\"spec\": {\"replicas\": 3}}, \"after\": {\"spec\": {\"replicas\": 6}}}], \"preconditions\": [{\"id\": \"deploy-version\", \"resource\": {\"type\": \"apps/v1/Deployment\", \"id\": \"k8s://prod-cluster/shop/checkout\"}, \"kind\": \"version\", \"expect\": \"48213977\", \"enforcement\": \"atomic\"}], \"blast_radius\": {\"resources\": 1, \"scopes\": [\"k8s://prod-cluster/shop\"]}, \"compensation\": {\"strategy\": \"restore\", \"summary\": \"Scale shop/checkout back to 3 replicas\", \"params\": {\"namespace\": \"shop\", \"name\": \"checkout\", \"replicas\": 3}}, \"idempotency_key\": \"incident-4711-scale-checkout\", \"principal\": {\"agent\": {\"id\": \"agent:incident-bot\", \"issuer\": \"https://idp.example.invalid\", \"kind\": \"agent\"}, \"sponsor\": {\"id\": \"alice\", \"issuer\": \"https://idp.example.invalid\", \"kind\": \"human\"}}, \"evidence\": [{\"kind\": \"k8s.server-dry-run\", \"media_type\": \"application/json\", \"digest\": \"sha256:f148c8b7f199d38632c676e75006b6a93d5fd4a62f3ea4fdc4e19814c8301345\"}], \"created_at\": \"2026-11-09T14:03:00Z\", \"expires_at\": \"2026-11-09T14:33:00Z\", \"plan_hash\": \"sha256:0953a597cc1706e48c66d3552f08a7804b29eb8210eddbb5e07e06c350d5db57\"}"
+    },
+    {
+      "name": "non-integer-number",
+      "reason": "6.5 is not an integer (§6.2 rule 1)",
+      "text": "{\"spec_version\": \"0.1\", \"action\": {\"name\": \"k8s.scale_deployment\", \"version\": \"1.0.0\", \"provider\": \"sealedplan-k8s\"}, \"params\": {\"namespace\": \"shop\", \"name\": \"checkout\", \"replicas\": 6.5}, \"effect\": \"REVERSIBLE\", \"risk\": {\"level\": \"medium\", \"reasons\": [\"production namespace\"]}, \"summary\": \"Scale shop/checkout from 3 to 6 replicas\", \"changes\": [{\"resource\": {\"type\": \"apps/v1/Deployment\", \"id\": \"k8s://prod-cluster/shop/checkout\"}, \"op\": \"update\", \"before\": {\"spec\": {\"replicas\": 3}}, \"after\": {\"spec\": {\"replicas\": 6}}}], \"preconditions\": [{\"id\": \"deploy-version\", \"resource\": {\"type\": \"apps/v1/Deployment\", \"id\": \"k8s://prod-cluster/shop/checkout\"}, \"kind\": \"version\", \"expect\": \"48213977\", \"enforcement\": \"atomic\"}], \"blast_radius\": {\"resources\": 1, \"scopes\": [\"k8s://prod-cluster/shop\"]}, \"compensation\": {\"strategy\": \"restore\", \"summary\": \"Scale shop/checkout back to 3 replicas\", \"params\": {\"namespace\": \"shop\", \"name\": \"checkout\", \"replicas\": 3}}, \"idempotency_key\": \"incident-4711-scale-checkout\", \"principal\": {\"agent\": {\"id\": \"agent:incident-bot\", \"issuer\": \"https://idp.example.invalid\", \"kind\": \"agent\"}, \"sponsor\": {\"id\": \"alice\", \"issuer\": \"https://idp.example.invalid\", \"kind\": \"human\"}}, \"evidence\": [{\"kind\": \"k8s.server-dry-run\", \"media_type\": \"application/json\", \"digest\": \"sha256:f148c8b7f199d38632c676e75006b6a93d5fd4a62f3ea4fdc4e19814c8301345\"}], \"created_at\": \"2026-11-09T14:03:00Z\", \"expires_at\": \"2026-11-09T14:33:00Z\", \"plan_hash\": \"sha256:0953a597cc1706e48c66d3552f08a7804b29eb8210eddbb5e07e06c350d5db57\"}"
+    },
+    {
+      "name": "integer-out-of-range",
+      "reason": "2^53 is outside the safe range (§6.2 rule 1)",
+      "text": "{\"spec_version\": \"0.1\", \"action\": {\"name\": \"k8s.scale_deployment\", \"version\": \"1.0.0\", \"provider\": \"sealedplan-k8s\"}, \"params\": {\"namespace\": \"shop\", \"name\": \"checkout\", \"replicas\": 9007199254740992}, \"effect\": \"REVERSIBLE\", \"risk\": {\"level\": \"medium\", \"reasons\": [\"production namespace\"]}, \"summary\": \"Scale shop/checkout from 3 to 6 replicas\", \"changes\": [{\"resource\": {\"type\": \"apps/v1/Deployment\", \"id\": \"k8s://prod-cluster/shop/checkout\"}, \"op\": \"update\", \"before\": {\"spec\": {\"replicas\": 3}}, \"after\": {\"spec\": {\"replicas\": 6}}}], \"preconditions\": [{\"id\": \"deploy-version\", \"resource\": {\"type\": \"apps/v1/Deployment\", \"id\": \"k8s://prod-cluster/shop/checkout\"}, \"kind\": \"version\", \"expect\": \"48213977\", \"enforcement\": \"atomic\"}], \"blast_radius\": {\"resources\": 1, \"scopes\": [\"k8s://prod-cluster/shop\"]}, \"compensation\": {\"strategy\": \"restore\", \"summary\": \"Scale shop/checkout back to 3 replicas\", \"params\": {\"namespace\": \"shop\", \"name\": \"checkout\", \"replicas\": 3}}, \"idempotency_key\": \"incident-4711-scale-checkout\", \"principal\": {\"agent\": {\"id\": \"agent:incident-bot\", \"issuer\": \"https://idp.example.invalid\", \"kind\": \"agent\"}, \"sponsor\": {\"id\": \"alice\", \"issuer\": \"https://idp.example.invalid\", \"kind\": \"human\"}}, \"evidence\": [{\"kind\": \"k8s.server-dry-run\", \"media_type\": \"application/json\", \"digest\": \"sha256:f148c8b7f199d38632c676e75006b6a93d5fd4a62f3ea4fdc4e19814c8301345\"}], \"created_at\": \"2026-11-09T14:03:00Z\", \"expires_at\": \"2026-11-09T14:33:00Z\", \"plan_hash\": \"sha256:0953a597cc1706e48c66d3552f08a7804b29eb8210eddbb5e07e06c350d5db57\"}"
+    },
+    {
+      "name": "duplicate-key",
+      "reason": "\"replicas\" appears twice (§6.2 rule 5)",
+      "text": "{\"spec_version\": \"0.1\", \"action\": {\"name\": \"k8s.scale_deployment\", \"version\": \"1.0.0\", \"provider\": \"sealedplan-k8s\"}, \"params\": {\"namespace\": \"shop\", \"name\": \"checkout\", \"replicas\": 6, \"replicas\": 7}, \"effect\": \"REVERSIBLE\", \"risk\": {\"level\": \"medium\", \"reasons\": [\"production namespace\"]}, \"summary\": \"Scale shop/checkout from 3 to 6 replicas\", \"changes\": [{\"resource\": {\"type\": \"apps/v1/Deployment\", \"id\": \"k8s://prod-cluster/shop/checkout\"}, \"op\": \"update\", \"before\": {\"spec\": {\"replicas\": 3}}, \"after\": {\"spec\": {\"replicas\": 6}}}], \"preconditions\": [{\"id\": \"deploy-version\", \"resource\": {\"type\": \"apps/v1/Deployment\", \"id\": \"k8s://prod-cluster/shop/checkout\"}, \"kind\": \"version\", \"expect\": \"48213977\", \"enforcement\": \"atomic\"}], \"blast_radius\": {\"resources\": 1, \"scopes\": [\"k8s://prod-cluster/shop\"]}, \"compensation\": {\"strategy\": \"restore\", \"summary\": \"Scale shop/checkout back to 3 replicas\", \"params\": {\"namespace\": \"shop\", \"name\": \"checkout\", \"replicas\": 3}}, \"idempotency_key\": \"incident-4711-scale-checkout\", \"principal\": {\"agent\": {\"id\": \"agent:incident-bot\", \"issuer\": \"https://idp.example.invalid\", \"kind\": \"agent\"}, \"sponsor\": {\"id\": \"alice\", \"issuer\": \"https://idp.example.invalid\", \"kind\": \"human\"}}, \"evidence\": [{\"kind\": \"k8s.server-dry-run\", \"media_type\": \"application/json\", \"digest\": \"sha256:f148c8b7f199d38632c676e75006b6a93d5fd4a62f3ea4fdc4e19814c8301345\"}], \"created_at\": \"2026-11-09T14:03:00Z\", \"expires_at\": \"2026-11-09T14:33:00Z\", \"plan_hash\": \"sha256:0953a597cc1706e48c66d3552f08a7804b29eb8210eddbb5e07e06c350d5db57\"}"
+    },
+    {
+      "name": "null-optional-field",
+      "reason": "an optional field is null instead of absent (§5)",
+      "text": "{\"spec_version\": \"0.1\", \"action\": {\"name\": \"k8s.scale_deployment\", \"version\": \"1.0.0\", \"provider\": \"sealedplan-k8s\"}, \"params\": {\"namespace\": \"shop\", \"name\": \"checkout\", \"replicas\": 6}, \"effect\": \"REVERSIBLE\", \"risk\": {\"level\": \"medium\", \"reasons\": [\"production namespace\"]}, \"summary\": \"Scale shop/checkout from 3 to 6 replicas\", \"changes\": [{\"resource\": {\"type\": \"apps/v1/Deployment\", \"id\": \"k8s://prod-cluster/shop/checkout\"}, \"op\": \"update\", \"before\": {\"spec\": {\"replicas\": 3}}, \"after\": {\"spec\": {\"replicas\": 6}}}], \"preconditions\": [{\"id\": \"deploy-version\", \"resource\": {\"type\": \"apps/v1/Deployment\", \"id\": \"k8s://prod-cluster/shop/checkout\"}, \"kind\": \"version\", \"expect\": \"48213977\", \"enforcement\": \"atomic\"}], \"blast_radius\": null, \"compensation\": {\"strategy\": \"restore\", \"summary\": \"Scale shop/checkout back to 3 replicas\", \"params\": {\"namespace\": \"shop\", \"name\": \"checkout\", \"replicas\": 3}}, \"idempotency_key\": \"incident-4711-scale-checkout\", \"principal\": {\"agent\": {\"id\": \"agent:incident-bot\", \"issuer\": \"https://idp.example.invalid\", \"kind\": \"agent\"}, \"sponsor\": {\"id\": \"alice\", \"issuer\": \"https://idp.example.invalid\", \"kind\": \"human\"}}, \"evidence\": [{\"kind\": \"k8s.server-dry-run\", \"media_type\": \"application/json\", \"digest\": \"sha256:f148c8b7f199d38632c676e75006b6a93d5fd4a62f3ea4fdc4e19814c8301345\"}], \"created_at\": \"2026-11-09T14:03:00Z\", \"expires_at\": \"2026-11-09T14:33:00Z\", \"plan_hash\": \"sha256:1ebc4a8d4a609fad38d2c1a6e3d24f3074779b1de88b323e085b5edce82c544e\"}"
+    },
+    {
+      "name": "fractional-seconds",
+      "reason": "timestamps have whole seconds (§5)",
+      "text": "{\"spec_version\": \"0.1\", \"action\": {\"name\": \"k8s.scale_deployment\", \"version\": \"1.0.0\", \"provider\": \"sealedplan-k8s\"}, \"params\": {\"namespace\": \"shop\", \"name\": \"checkout\", \"replicas\": 6}, \"effect\": \"REVERSIBLE\", \"risk\": {\"level\": \"medium\", \"reasons\": [\"production namespace\"]}, \"summary\": \"Scale shop/checkout from 3 to 6 replicas\", \"changes\": [{\"resource\": {\"type\": \"apps/v1/Deployment\", \"id\": \"k8s://prod-cluster/shop/checkout\"}, \"op\": \"update\", \"before\": {\"spec\": {\"replicas\": 3}}, \"after\": {\"spec\": {\"replicas\": 6}}}], \"preconditions\": [{\"id\": \"deploy-version\", \"resource\": {\"type\": \"apps/v1/Deployment\", \"id\": \"k8s://prod-cluster/shop/checkout\"}, \"kind\": \"version\", \"expect\": \"48213977\", \"enforcement\": \"atomic\"}], \"blast_radius\": {\"resources\": 1, \"scopes\": [\"k8s://prod-cluster/shop\"]}, \"compensation\": {\"strategy\": \"restore\", \"summary\": \"Scale shop/checkout back to 3 replicas\", \"params\": {\"namespace\": \"shop\", \"name\": \"checkout\", \"replicas\": 3}}, \"idempotency_key\": \"incident-4711-scale-checkout\", \"principal\": {\"agent\": {\"id\": \"agent:incident-bot\", \"issuer\": \"https://idp.example.invalid\", \"kind\": \"agent\"}, \"sponsor\": {\"id\": \"alice\", \"issuer\": \"https://idp.example.invalid\", \"kind\": \"human\"}}, \"evidence\": [{\"kind\": \"k8s.server-dry-run\", \"media_type\": \"application/json\", \"digest\": \"sha256:f148c8b7f199d38632c676e75006b6a93d5fd4a62f3ea4fdc4e19814c8301345\"}], \"created_at\": \"2026-11-09T14:03:00.500Z\", \"expires_at\": \"2026-11-09T14:33:00Z\", \"plan_hash\": \"sha256:daaa5967cf2035ff7ab3247d822b591795eaf6c113b72270f05b5d1de442bc09\"}"
+    },
+    {
+      "name": "missing-precondition",
+      "reason": "a REVERSIBLE plan needs a precondition (§5.2.1)",
+      "text": "{\"spec_version\": \"0.1\", \"action\": {\"name\": \"k8s.scale_deployment\", \"version\": \"1.0.0\", \"provider\": \"sealedplan-k8s\"}, \"params\": {\"namespace\": \"shop\", \"name\": \"checkout\", \"replicas\": 6}, \"effect\": \"REVERSIBLE\", \"risk\": {\"level\": \"medium\", \"reasons\": [\"production namespace\"]}, \"summary\": \"Scale shop/checkout from 3 to 6 replicas\", \"changes\": [{\"resource\": {\"type\": \"apps/v1/Deployment\", \"id\": \"k8s://prod-cluster/shop/checkout\"}, \"op\": \"update\", \"before\": {\"spec\": {\"replicas\": 3}}, \"after\": {\"spec\": {\"replicas\": 6}}}], \"preconditions\": [], \"blast_radius\": {\"resources\": 1, \"scopes\": [\"k8s://prod-cluster/shop\"]}, \"compensation\": {\"strategy\": \"restore\", \"summary\": \"Scale shop/checkout back to 3 replicas\", \"params\": {\"namespace\": \"shop\", \"name\": \"checkout\", \"replicas\": 3}}, \"idempotency_key\": \"incident-4711-scale-checkout\", \"principal\": {\"agent\": {\"id\": \"agent:incident-bot\", \"issuer\": \"https://idp.example.invalid\", \"kind\": \"agent\"}, \"sponsor\": {\"id\": \"alice\", \"issuer\": \"https://idp.example.invalid\", \"kind\": \"human\"}}, \"evidence\": [{\"kind\": \"k8s.server-dry-run\", \"media_type\": \"application/json\", \"digest\": \"sha256:f148c8b7f199d38632c676e75006b6a93d5fd4a62f3ea4fdc4e19814c8301345\"}], \"created_at\": \"2026-11-09T14:03:00Z\", \"expires_at\": \"2026-11-09T14:33:00Z\", \"plan_hash\": \"sha256:4fbadecd1ae4b55cec326cddd64ebcdb55f02cd7fe585834ab8d924ffb7972ef\"}"
+    }
+  ]
+}

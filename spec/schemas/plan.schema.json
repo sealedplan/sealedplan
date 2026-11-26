@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/sealedplan/sealedplan/blob/main/spec/schemas/plan.schema.json",
+  "title": "sealedplan v0.1 Plan",
+  "description": "SPEC §5.2. A schema cannot check plan_hash (§6.1), expires_at > created_at, unique precondition ids, or the producer rule that REVERSIBLE and COMPENSATABLE plans carry compensation (§5.2.5); receivers check those in code.",
+  "type": "object",
+  "required": [
+    "spec_version",
+    "action",
+    "params",
+    "effect",
+    "risk",
+    "summary",
+    "changes",
+    "preconditions",
+    "idempotency_key",
+    "principal",
+    "created_at",
+    "expires_at",
+    "plan_hash"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "spec_version": { "$ref": "common.schema.json#/$defs/spec_version" },
+    "action": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "provider": { "type": "string" }
+      }
+    },
+    "params": { "$ref": "common.schema.json#/$defs/object" },
+    "effect": { "enum": ["READ_ONLY", "REVERSIBLE", "COMPENSATABLE", "IRREVERSIBLE"] },
+    "risk": {
+      "type": "object",
+      "required": ["level"],
+      "additionalProperties": false,
+      "properties": {
+        "level": { "enum": ["low", "medium", "high", "critical"] },
+        "reasons": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "summary": { "type": "string" },
+    "changes": { "type": "array", "items": { "$ref": "#/$defs/change" } },
+    "preconditions": {
+      "type": "array",
+      "items": { "$ref": "common.schema.json#/$defs/precondition" }
+    },
+    "blast_radius": {
+      "type": "object",
+      "required": ["resources", "scopes"],
+      "additionalProperties": false,
+      "properties": {
+        "resources": { "$ref": "common.schema.json#/$defs/safe_integer", "minimum": 0 },
+        "scopes": { "type": "array", "items": { "type": "string" } },
+        "estimate": { "type": "boolean" },
+        "notes": { "type": "string" }
+      }
+    },
+    "compensation": {
+      "type": "object",
+      "required": ["strategy", "summary"],
+      "additionalProperties": false,
+      "properties": {
+        "strategy": { "enum": ["restore", "semantic"] },
+        "summary": { "type": "string" },
+        "params": { "$ref": "common.schema.json#/$defs/object" },
+        "preconditions": {
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/precondition" }
+        }
+      }
+    },
+    "idempotency_key": { "type": "string", "minLength": 1 },
+    "principal": {
+      "type": "object",
+      "required": ["agent"],
+      "additionalProperties": false,
+      "properties": {
+        "agent": { "$ref": "common.schema.json#/$defs/principal" },
+        "sponsor": { "$ref": "common.schema.json#/$defs/principal" }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "media_type", "digest"],
+        "additionalProperties": false,
+        "properties": {
+          "kind": { "type": "string" },
+          "media_type": { "type": "string" },
+          "digest": { "$ref": "common.schema.json#/$defs/digest" }
+        }
+      }
+    },
+    "created_at": { "$ref": "common.schema.json#/$defs/timestamp" },
+    "expires_at": { "$ref": "common.schema.json#/$defs/timestamp" },
+    "parent": {
+      "type": "object",
+      "required": ["run_id", "step"],
+      "additionalProperties": false,
+      "properties": {
+        "run_id": { "type": "string" },
+        "step": { "$ref": "common.schema.json#/$defs/safe_integer", "minimum": 0 }
+      }
+    },
+    "extensions": {
+      "description": "Keys are reverse-DNS names or URIs (§5).",
+      "$ref": "common.schema.json#/$defs/object",
+      "propertyNames": { "pattern": "[.:]" }
+    },
+    "plan_hash": { "$ref": "common.schema.json#/$defs/digest" }
+  },
+  "allOf": [
+    {
+      "description": "Only a READ_ONLY plan may have no preconditions (§5.2.1).",
+      "if": { "not": { "properties": { "effect": { "const": "READ_ONLY" } } } },
+      "then": { "properties": { "preconditions": { "minItems": 1 } } }
+    },
+    {
+      "description": "An IRREVERSIBLE plan has no compensation (§5.2.5).",
+      "if": { "properties": { "effect": { "const": "IRREVERSIBLE" } } },
+      "then": { "not": { "required": ["compensation"] } }
+    },
+    {
+      "description": "strategy restore is only for REVERSIBLE plans (§5.2.5).",
+      "if": {
+        "required": ["compensation"],
+        "properties": { "compensation": { "properties": { "strategy": { "const": "restore" } } } }
+      },
+      "then": { "properties": { "effect": { "const": "REVERSIBLE" } } }
+    }
+  ],
+  "$defs": {
+    "change": {
+      "description": "§5.2.2.",
+      "type": "object",
+      "required": ["resource", "op"],
+      "additionalProperties": false,
+      "properties": {
+        "resource": { "$ref": "common.schema.json#/$defs/resource" },
+        "op": { "enum": ["create", "update", "delete", "invoke"] },
+        "before": { "$ref": "common.schema.json#/$defs/object" },
+        "after": { "$ref": "common.schema.json#/$defs/object" },
+        "patch": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/object" } },
+        "sensitive": {
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/json_pointer" }
+        }
+      }
+    }
+  }
+}

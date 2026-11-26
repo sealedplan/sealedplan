@@ -1207,6 +1207,7 @@ agent-sdk = [
 ]
 dev = [
     { name = "hypothesis" },
+    { name = "jsonschema" },
     { name = "mypy" },
     { name = "pytest" },
     { name = "ruff" },
@@ -1222,6 +1223,7 @@ requires-dist = [
 agent-sdk = [{ name = "claude-agent-sdk", specifier = ">=0.2.187,<0.3" }]
 dev = [
     { name = "hypothesis", specifier = ">=6.100" },
+    { name = "jsonschema", specifier = ">=4.26" },
     { name = "mypy", specifier = ">=1.11" },
     { name = "pytest", specifier = ">=8.3" },
     { name = "ruff", specifier = ">=0.6" },

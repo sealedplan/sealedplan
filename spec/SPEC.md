@@ -2,8 +2,8 @@
 
 Status: **draft for review**. Not stable.
 
-Protocol identifiers in this draft (§12, §13, §14) assume a GitHub organization named
-`sealedplan`. They change if the project moves to a domain of its own (Q1). Hosts under
+Protocol identifiers in this draft (§12, §13, §14) live under the `sealedplan` GitHub
+organization (Q1). Hosts under
 `example.invalid` are illustrations only.
 
 ## 1. Introduction
@@ -135,6 +135,11 @@ SHOULD raise the default risk by one level (§5.2.4).
 All objects are JSON. All objects carry `spec_version: "0.1"`. Timestamps are RFC 3339
 in UTC with a `Z` suffix and whole seconds (`2026-11-09T14:03:00Z`). Identifiers are
 strings. Optional fields that have no value MUST be omitted, not set to `null`.
+
+JSON Schemas (draft 2020-12) for every object are in
+[`schemas/`](schemas). Where a schema and this text disagree, this text wins. A schema
+cannot check everything: the plan hash, `expires_at` after `created_at`, and the
+approval rules in §5.3 are checked in code.
 
 Fields not defined by this spec MUST be placed under `extensions`, keyed by a
 reverse-DNS or URI identifier. Receivers MUST ignore extension keys they do not
@@ -383,9 +388,18 @@ Approval signatures (§5.3) are computed over the JCS form of the approval.
 
 ### 6.4 Test vectors
 
-`schemas/test-vectors/` will hold plans and their expected hashes. Implementations
-MUST pass them. They will be produced by the reference implementation and checked
-against at least one independent JCS implementation.
+[`test-vectors/plans.json`](test-vectors/plans.json) holds plans and their expected
+hashes. Implementations MUST pass them:
+
+- For each `valid` case, the JCS form of `plan` without `plan_hash` equals `canonical`
+  (as UTF-8 bytes), its SHA-256 equals `plan_hash`, and a receiver accepts the plan.
+  The cases cover UTF-16 key order, string escapes, integer limits, `null` inside free
+  JSON, and every optional plan field.
+- For each `invalid` case, a receiver rejects `text`. Each case breaks one rule and
+  names it in `reason`.
+
+The reference implementation produces the file. It has not yet been checked against an
+independent JCS implementation.
 
 ## 7. State machine
 
@@ -767,7 +781,7 @@ extension from clients.
 "capabilities": {
   "extensions": [
     {
-      "uri": "https://github.com/sealedplan/spec/ext/a2a/v0.1",
+      "uri": "https://github.com/sealedplan/sealedplan/blob/main/spec/ext/a2a/v0.1.md",
       "description": "Typed plan and approval for side-effecting tasks",
       "required": false,
       "params": { "spec_version": "0.1", "approval_modes": ["signed", "url"] }
@@ -795,7 +809,7 @@ above.
 
 ### 13.3 Flow
 
-Metadata below is stored under the key `https://github.com/sealedplan/spec/ext/a2a/v0.1`.
+Metadata below is stored under the key `https://github.com/sealedplan/sealedplan/blob/main/spec/ext/a2a/v0.1.md`.
 
 1. **Approval needed:** the agent moves the task to `TASK_STATE_INPUT_REQUIRED`. The
    status message contains a Plan part, and its metadata is
@@ -846,10 +860,11 @@ the A2A extension URI change with every major version.
 
 ## 16. Open questions for review
 
-- **Q1 — Identifiers.** The MCP extension ID `io.github.sealedplan/plan-apply` and the
-  A2A URI `https://github.com/sealedplan/spec/ext/a2a/v0.1` only work if the
-  `sealedplan` GitHub organization is claimed. A domain the project owns (for example
-  `sealedplan.dev` → `dev.sealedplan/plan-apply`) would be more durable. Media types
+- **Q1 — Identifiers.** *Resolved for v0.1.* The `sealedplan` GitHub organization is
+  claimed. The MCP extension ID is `io.github.sealedplan/plan-apply`, and the A2A URI
+  `https://github.com/sealedplan/sealedplan/blob/main/spec/ext/a2a/v0.1.md` resolves to
+  a page in this repository. A domain the project owns would be more durable; moving
+  to one would be a major version change (§15). Media types
   `application/vnd.sealedplan.*+json` are unregistered vendor types.
 - **Q2 — `principal` in the hash.** Included in this draft: an approval is for *this*
   agent to do *this*. The cost is that the same change from two agents needs two
@@ -867,5 +882,6 @@ the A2A extension URI change with every major version.
   move from the capability map onto each tool.
 - **Q8 — Signature format.** Detached JWS is proposed. COSE, or plain Ed25519 over JCS
   bytes, are alternatives.
-- **Q9 — JSON Schemas.** Field tables are written in prose here. The schema files and
-  hash test vectors are next, once the object shapes are agreed.
+- **Q9 — JSON Schemas.** *Resolved.* Schemas are in [`schemas/`](schemas) and hash test
+  vectors in [`test-vectors/`](test-vectors) (§6.4). Still open: checking the vectors
+  against an independent JCS implementation.
