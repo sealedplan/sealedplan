@@ -72,11 +72,35 @@ class Proposal:
 
 
 @dataclass(frozen=True)
+class Deviation:
+    """After apply, a resource does not look the way the plan said it would (§8.5).
+
+    ``path`` is a JSON Pointer into ``changes[].after``; an empty path is about the
+    resource itself, for example a deleted resource that still exists.
+    """
+
+    resource: str
+    path: str
+    expected: Any
+    observed: Any
+
+    def to_obj(self) -> dict[str, Any]:
+        return {
+            "resource": self.resource,
+            "path": self.path,
+            "expected": self.expected,
+            "observed": self.observed,
+        }
+
+
+@dataclass(frozen=True)
 class Execution:
     state: State
     applied: Applied | None = None
     drift: tuple[PreconditionResult, ...] = ()
     error: str | None = None
+    # Set only for APPLIED. Recorded, not acted on: the default is to alert (§8.5).
+    deviation: tuple[Deviation, ...] = ()
 
 
 def utc_now() -> datetime:
@@ -85,6 +109,28 @@ def utc_now() -> datetime:
 
 def _human_only(approval: Approval, record: PlanRecord) -> bool:
     return approval.approver.kind == "human"
+
+
+def _compare(
+    res_id: str, path: str, expected: Mapping[str, Any], observed: Mapping[str, Any], skip: set[str]
+) -> list[Deviation]:
+    """Fields of ``expected`` that ``observed`` holds with a different value.
+
+    A field the observation leaves out is not compared: the action does not project it.
+    """
+    out: list[Deviation] = []
+    for key, want in expected.items():
+        here = f"{path}/{str(key).replace('~', '~0').replace('/', '~1')}"
+        if here in skip or key not in observed:
+            continue
+        got = observed[key]
+        if isinstance(want, Mapping) and isinstance(got, Mapping):
+            out.extend(_compare(res_id, here, want, got, skip))
+        elif any(s.startswith(f"{here}/") for s in skip):
+            continue  # holds a sensitive field; never copy it into the record
+        elif want != got:
+            out.append(Deviation(res_id, here, want, got))
+    return out
 
 
 @dataclass
@@ -372,8 +418,16 @@ class Runtime:
             raise PlanError("provider returned an Applied record for a different plan")
         observed = applied.observed or self._observe_changes(bound, plan, ctx)
         applied = applied.model_copy(update={"finished_at": self.now(), "observed": observed})
-        self.store.record_applied(applied, State.APPLYING, State.APPLIED, self.identity, self.now())
-        return Execution(State.APPLIED, applied)
+        deviation, unchecked = self._deviation(bound, plan, ctx)
+        check: dict[str, Any] = {}
+        if deviation:
+            check["deviation"] = [d.to_obj() for d in deviation]
+        if unchecked:
+            check["unchecked"] = unchecked
+        self.store.record_applied(
+            applied, State.APPLYING, State.APPLIED, self.identity, self.now(), check or None
+        )
+        return Execution(State.APPLIED, applied, deviation=deviation)
 
     def _observe_changes(
         self, bound: BoundAction, plan: Plan, ctx: Context
@@ -385,6 +439,37 @@ class Runtime:
                 snap = bound.observe(ctx, res).snapshot()
                 observed[res.id] = {"type": res.type, **snap}
         return observed or None
+
+    def _deviation(
+        self, bound: BoundAction, plan: Plan, ctx: Context
+    ) -> tuple[tuple[Deviation, ...], list[str]]:
+        """Compare each changed resource with the plan's ``after`` (§8.5).
+
+        Only fields the action's observation projects are compared, and fields marked
+        sensitive are skipped. A resource the action cannot observe is listed as
+        unchecked: the change has already happened, so a failed check must not undo it.
+        """
+        last = {c.resource.id: c for c in plan.changes if c.op != "invoke"}
+        found: list[Deviation] = []
+        unchecked: list[str] = []
+        for res_id, change in last.items():
+            try:
+                now = bound.observe(ctx, change.resource)
+            except Exception:
+                unchecked.append(res_id)
+                continue
+            if change.op == "delete":
+                if now.exists:
+                    found.append(Deviation(res_id, "", "absent", "exists"))
+                continue
+            if not now.exists:
+                found.append(Deviation(res_id, "", "exists", "absent"))
+                continue
+            if change.after is None or now.state is None:
+                continue
+            skip = {p.removeprefix("/after") for p in change.sensitive or ()}
+            found.extend(_compare(res_id, "", change.after, now.state, skip))
+        return tuple(found), unchecked
 
     # --- compensate --------------------------------------------------------------------
 

@@ -173,7 +173,7 @@ that uses it. A LangGraph adapter is planned.
 
 | State | Meaning | What to do |
 |---|---|---|
-| `APPLIED` | The approved change was made. | Nothing, or `compensate` to undo. |
+| `APPLIED` | The approved change was made. `result.deviation` lists any field that ended up different from the plan. | Nothing, or `compensate` to undo. Check `deviation` if it is not empty. |
 | `DRIFTED` | A precondition no longer held. Nothing was written. | Propose again; the person sees the new values. |
 | `FAILED` | The target refused the change. Nothing was written. | Read `error`; propose again if it makes sense. |
 | `UNKNOWN` | The change may or may not have happened, for example after a lost connection. | `rt.reconcile(plan_hash)` asks the action to check; if it cannot tell, a person decides. |

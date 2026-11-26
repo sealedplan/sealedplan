@@ -108,7 +108,7 @@ Severity order: `READ_ONLY < REVERSIBLE < COMPENSATABLE < IRREVERSIBLE`.
    section (§5.2.5). Without one, the runtime MUST treat the plan as `IRREVERSIBLE`.
 4. An action MUST NOT declare `READ_ONLY` if `apply` writes anything outside the
    runtime's records. A runtime that observes a write from a `READ_ONLY` action
-   (§8.5) MUST record a `deviation` event.
+   MUST record it as a deviation (§8.5).
 
 ### 4.3 Why per plan
 
@@ -483,8 +483,29 @@ DRIFTED, not FAILED.
 
 After APPLIED, a runtime SHOULD observe the changed resources and compare them with
 `changes[].after`. A mismatch on a field the plan said would change, or a change to a
-resource the plan did not list, is recorded as a `deviation` event. Policy decides
-whether a deviation triggers compensation. The default is to alert and not compensate.
+resource the plan did not list, is a **deviation**. Policy decides whether a deviation
+triggers compensation. The default is to alert and not compensate.
+
+Events record only transitions (§5.6), so a deviation is recorded in the `detail` of
+the `APPLYING → APPLIED` event:
+
+```json
+{"deviation": [{"resource": "<resource id>", "path": "/value", "expected": 5, "observed": 6}],
+ "unchecked": ["<resource id>"]}
+```
+
+- `path` is a JSON Pointer into that change's `after`. An empty path is about the
+  resource itself: a deleted resource that still exists, or a created or updated one
+  that is gone.
+- Only fields the provider's observation includes are compared, and fields listed in
+  `sensitive` are never compared or copied into `detail`.
+- `unchecked` lists resources the runtime could not observe. The change has already
+  happened, so a failed check MUST NOT change the outcome.
+- Both keys are omitted when empty.
+
+A runtime can only see what its providers observe. A write to a resource the plan did
+not list, including a write by a `READ_ONLY` action, is detected only where a provider
+can observe it.
 
 ## 9. Idempotency, runs, and compensation
 

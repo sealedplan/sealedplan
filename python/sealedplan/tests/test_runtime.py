@@ -34,6 +34,7 @@ from sealedplan.runtime import (
     Runtime,
     UnknownActionError,
     WrongStateError,
+    _compare,
 )
 from sealedplan.state import State
 from sealedplan.store import IdempotencyError, SqliteStore
@@ -70,6 +71,7 @@ class World:
     fail_next: str | None = None
     applies: int = 0
     compensations: list[str] = field(default_factory=list)
+    blind: bool = False
 
     def put(self, key: str, value: int) -> None:
         cell = self.cells.setdefault(key, Cell(value, 0))
@@ -116,6 +118,8 @@ class _SetValue:
         )
 
     def observe(self, ctx: Context, resource: ResourceRef) -> Observation:
+        if self.world.blind:
+            raise ConnectionError("target unreachable")
         cell = self.world.cells.get(resource.id.removeprefix("test://"))
         if cell is None:
             return ABSENT
@@ -135,7 +139,11 @@ class _SetValue:
         version = str(self.world.cells[key].version)
         if version != pre.expect:
             raise PreconditionFailedError([PreconditionResult(pre.id, False, pre.expect, version)])
-        self.world.put(key, plan.params["value"])
+        self.world.put(key, plan.params["value"] + (1 if fail == "skew" else 0))
+        if fail == "blind":
+            self.world.blind = True  # observe fails from now on
+            # like terraform.apply: the action reports what it saw itself
+            return ctx.applied(plan, observed={"test://state": {"type": "test/State"}})
         return ctx.applied(plan)
 
     def compensate(self, ctx: Context, plan: Plan, applied: Applied) -> None:
@@ -262,6 +270,44 @@ def test_auto_approved_plan_applies(env: Env) -> None:
     assert result.applied.observed["test://k"]["version"] == "2"
     assert [a.method for a in env.store.approvals(plan.plan_hash)] == ["policy"]
     assert env.store.verify_events()
+    assert result.deviation == ()
+    assert env.store.events(plan.plan_hash)[-1].detail is None
+
+
+def test_deviation_after_apply_is_recorded_not_undone(env: Env) -> None:
+    plan = env.propose("test.set_low")
+    env.world.fail_next = "skew"  # the target stores 6, not the planned 5
+    result = env.rt.execute(plan.plan_hash)
+    assert result.state is State.APPLIED
+    assert [d.to_obj() for d in result.deviation] == [
+        {"resource": "test://k", "path": "/value", "expected": 5, "observed": 6}
+    ]
+    last = env.store.events(plan.plan_hash)[-1]
+    assert last.to is State.APPLIED
+    assert last.detail == {"deviation": [d.to_obj() for d in result.deviation]}
+    assert env.world.compensations == []  # the default is to alert, not compensate
+    assert env.store.verify_events()
+
+
+def test_resource_the_action_cannot_observe_is_unchecked(env: Env) -> None:
+    plan = env.propose("test.set_low")
+    env.world.fail_next = "blind"
+    result = env.rt.execute(plan.plan_hash)
+    assert result.state is State.APPLIED
+    assert result.deviation == ()
+    assert env.store.events(plan.plan_hash)[-1].detail == {"unchecked": ["test://k"]}
+
+
+def test_compare_skips_sensitive_and_unprojected_fields() -> None:
+    expected = {"spec": {"replicas": 3, "token": "x"}, "note": "hi", "a/b": 1}
+    observed = {"spec": {"replicas": 2, "token": "y"}, "a/b": 2}
+    found = _compare("r", "", expected, observed, {"/spec/token"})
+    assert [(d.path, d.expected, d.observed) for d in found] == [
+        ("/spec/replicas", 3, 2),
+        ("/a~1b", 1, 2),
+    ]
+    # A sensitive field inside a value that no longer has the planned shape stays out.
+    assert _compare("r", "", {"spec": {"token": "x"}}, {"spec": None}, {"/spec/token"}) == []
 
 
 def test_approval_flow(env: Env) -> None:
