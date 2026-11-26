@@ -177,10 +177,10 @@ match; a runtime MUST NOT compare principals by `id` alone.
   ],
   "preconditions": [
     {
-      "id": "deploy-version",
+      "id": "deploy-generation",
       "resource": { "type": "apps/v1/Deployment", "id": "k8s://prod-cluster/shop/checkout" },
       "kind": "version",
-      "expect": "48213977",
+      "expect": "7",
       "enforcement": "atomic"
     }
   ],
@@ -237,7 +237,7 @@ Each precondition names one observable fact that MUST still be true at apply tim
 
 | `kind` | `expect` | Holds when |
 |---|---|---|
-| `version` | opaque string | the resource's version token equals `expect` (k8s `resourceVersion`, HTTP `ETag`, Terraform state `serial` + `lineage`, SQL row version) |
+| `version` | opaque string | the resource's version token equals `expect` (k8s `metadata.generation`, HTTP `ETag`, Terraform state `serial` + `lineage`, SQL row version) |
 | `fingerprint` | `sha256:<hex>` | SHA-256 of the canonical (§6) projection named by `select` equals `expect` |
 | `exists` | — | the resource exists |
 | `absent` | — | the resource does not exist |
@@ -253,6 +253,12 @@ state; the projection is an object mapping pointer → value), and `enforcement`
   the check and the write. §8.3 bounds it.
 
 Providers SHOULD use `atomic` whenever the target system supports it.
+
+The version token SHOULD change only when the state the plan depends on changes.
+Otherwise plans drift for no reason. For example, a Kubernetes `resourceVersion` changes
+on every status update, such as a pod becoming ready, so the token is `generation`,
+which changes only with the spec. The write can still be atomic: the provider reads the
+object, compares `generation`, and writes with that read's `resourceVersion`.
 
 #### 5.2.4 `risk`
 
@@ -418,6 +424,7 @@ PLANNED ──policy: deny──────────────────
                                          ▼
                                      APPLYING
                                          ├──► FAILED                            (terminal)
+                                         ├──► DRIFTED  atomic precondition rejected (terminal)
                                          ├──► UNKNOWN ──reconcile──► APPLIED | FAILED
                                          ▼
                                      APPLIED ──► COMPENSATING ──► COMPENSATED          (terminal)
@@ -439,16 +446,22 @@ APPLIED is final unless compensation is triggered.
 | APPROVED | DRIFTED | any precondition fails on re-check (§8) |
 | APPROVED | APPLYING | approvals valid, unexpired, unused; all preconditions hold |
 | APPLYING | APPLIED, FAILED, UNKNOWN | provider result |
+| APPLYING | DRIFTED | the target system rejected the write on an `atomic` precondition (§8.4) |
 | UNKNOWN | APPLIED, FAILED | reconcile (§7.3) |
 | APPLIED | COMPENSATING | compensation triggered (§9.3) |
-| COMPENSATING | COMPENSATED, COMPENSATION_FAILED | provider result or conflict |
+| COMPENSATING | COMPENSATED, COMPENSATION_FAILED | provider result, conflict, or restart (below) |
 
 Any transition not in this table MUST be refused.
 
 A transition MUST be persisted before the side effect that follows it: APPLYING is
 written before `apply` is called, and COMPENSATING before `compensate`. A runtime that
-restarts and finds a plan in APPLYING or COMPENSATING MUST move it to UNKNOWN and
-reconcile. It MUST NOT call `apply` again blindly.
+restarts and finds a plan in APPLYING MUST move it to UNKNOWN and reconcile. It MUST NOT
+call `apply` again blindly.
+
+A runtime that restarts and finds a plan in COMPENSATING MUST record COMPENSATION_FAILED
+with outcome `unknown` and escalate to a human. It MUST NOT call `compensate` again
+blindly. UNKNOWN is not used here because it reconciles only to APPLIED or FAILED, which
+would lose the fact that compensation had started.
 
 ### 7.3 Reconcile
 
@@ -689,6 +702,10 @@ whether or not `Tool` carries `_meta` in this MCP revision, which is unverified 
   }
 }
 ```
+
+`approval_modes` lists the approval channels the server accepts (§12.4): `url`, `form`,
+or `out_of_band`. It also contains `explicit` if the server supports explicit mode
+(§12.5).
 
 Servers SHOULD also set the standard tool annotations to match the effect class, so
 clients that don't know this extension still get the right hint.

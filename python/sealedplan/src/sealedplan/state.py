@@ -25,12 +25,8 @@ class State(StrEnum):
 
 S = State
 
-# §7.2, plus APPLYING -> DRIFTED, which §8.4 requires (the target system rejected an
-# atomic precondition) but the table omits.
-#
-# A restart that finds COMPENSATING records COMPENSATION_FAILED (outcome "unknown") and
-# escalates to a human. §7.2's prose says UNKNOWN, but UNKNOWN only reconciles to APPLIED
-# or FAILED, which would lose the fact that compensation had started.
+# The transition table of SPEC §7.2, including APPLYING -> DRIFTED (§8.4) and the
+# restart rule for COMPENSATING.
 TRANSITIONS: Mapping[State, frozenset[State]] = {
     S.PLANNED: frozenset({S.APPROVED, S.PENDING_APPROVAL, S.DENIED}),
     S.PENDING_APPROVAL: frozenset({S.APPROVED, S.REJECTED, S.EXPIRED}),
