@@ -3,7 +3,7 @@ name = "sealedplan-workspace"
 version = "0.0.0"
 description = "Development workspace for the sealedplan monorepo"
 requires-python = ">=3.11"
-dependencies = ["sealedplan", "sealedplan-mcp", "sealedplan-langgraph", "sealedplan-openai-agents"]
+dependencies = ["sealedplan[signing]", "sealedplan-mcp", "sealedplan-langgraph", "sealedplan-openai-agents"]
 
 [dependency-groups]
 dev = [

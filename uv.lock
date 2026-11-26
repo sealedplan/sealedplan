@@ -1893,8 +1893,17 @@ dependencies = [
     { name = "pydantic" },
 ]
 
+[package.optional-dependencies]
+signing = [
+    { name = "pyjwt", extra = ["crypto"] },
+]
+
 [package.metadata]
-requires-dist = [{ name = "pydantic", specifier = ">=2.7,<3" }]
+requires-dist = [
+    { name = "pydantic", specifier = ">=2.7,<3" },
+    { name = "pyjwt", extras = ["crypto"], marker = "extra == 'signing'", specifier = ">=2.10,<3" },
+]
+provides-extras = ["signing"]
 
 [[package]]
 name = "sealedplan-langgraph"
@@ -1948,7 +1957,7 @@ name = "sealedplan-workspace"
 version = "0.0.0"
 source = { virtual = "." }
 dependencies = [
-    { name = "sealedplan" },
+    { name = "sealedplan", extra = ["signing"] },
     { name = "sealedplan-langgraph" },
     { name = "sealedplan-mcp" },
     { name = "sealedplan-openai-agents" },
@@ -1969,7 +1978,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "sealedplan", editable = "python/sealedplan" },
+    { name = "sealedplan", extras = ["signing"], editable = "python/sealedplan" },
     { name = "sealedplan-langgraph", editable = "adapters/langgraph" },
     { name = "sealedplan-mcp", editable = "adapters/mcp" },
     { name = "sealedplan-openai-agents", editable = "adapters/openai-agents" },

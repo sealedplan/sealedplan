@@ -329,7 +329,12 @@ Rules:
 8. `signature` is OPTIONAL when the runtime collected the approval itself over an
    authenticated channel. It is REQUIRED when the approval arrives through a party the
    runtime does not trust (an MCP client or A2A client: §12.4, §13.4). It is a detached
-   JWS (RFC 7515) over the canonical approval with `signature` removed.
+   JWS (RFC 7515 Appendix F) with an unencoded payload (RFC 7797: protected header
+   `{"alg", "kid", "b64": false, "crit": ["b64"]}`) over the JCS bytes of the approval
+   with `signature` removed. `value` is the compact serialization with an empty payload
+   (`<header>..<signature>`); `alg` and `kid` MUST equal the header's. `alg` MUST be
+   asymmetric: `EdDSA` (Ed25519) or `ES256`. The runtime MUST bind each `kid` to one
+   approver and refuse a signature whose key belongs to anyone but `approver`.
 
 ### 5.4 Applied
 
@@ -902,8 +907,9 @@ the A2A extension URI change with every major version.
   re-plan".
 - **Q7 — MCP `Tool._meta`.** If confirmed for 2026-07-28, per-tool declarations could
   move from the capability map onto each tool.
-- **Q8 — Signature format.** Detached JWS is proposed. COSE, or plain Ed25519 over JCS
-  bytes, are alternatives.
+- **Q8 — Signature format.** *Resolved: detached JWS* with an unencoded JCS payload,
+  `EdDSA` or `ES256`, and each key bound to one approver (§5.3 rule 8). JWS has the
+  widest library support; COSE was the alternative.
 - **Q9 — JSON Schemas.** *Resolved.* Schemas are in [`schemas/`](schemas) and hash test
   vectors in [`test-vectors/`](test-vectors) (§6.4), checked against an independent JCS
   implementation.

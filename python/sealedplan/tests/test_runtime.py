@@ -373,6 +373,21 @@ def test_untrusted_channel_needs_verified_signature(env: Env) -> None:
     )
 
 
+def test_untrusted_channel_with_a_real_jws(env: Env) -> None:
+    from cryptography.hazmat.primitives.asymmetric import ed25519
+
+    from sealedplan.signing import ApprovalVerifier, sign_approval
+
+    key = ed25519.Ed25519PrivateKey.generate()
+    env.rt.verify_signature = ApprovalVerifier({"bob-1": (key.public_key(), BOB)})
+    plan = env.propose()
+    forged = sign_approval(approval(plan, CAROL), key, kid="bob-1")
+    with pytest.raises(ApprovalError, match="did not verify"):
+        env.rt.submit_approval(forged, trusted_channel=False)
+    signed = sign_approval(approval(plan), key, kid="bob-1")
+    assert env.rt.submit_approval(signed, trusted_channel=False) is State.APPROVED
+
+
 def test_apply_by_limits_who_applies(env: Env) -> None:
     plan = env.propose()
     env.approve(plan)
