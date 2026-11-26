@@ -167,7 +167,17 @@ create_server(rt, agent=AGENT).run()
 
 See [`examples/mcp_server`](examples/mcp_server/crm_server.py), and
 [`examples/agent_sdk`](examples/agent_sdk/crm_assistant.py) for a Claude Agent SDK agent
-that uses it. A LangGraph adapter is planned.
+that uses it. To let people approve on a web page where they sign in, serve
+`sealedplan_mcp.approval_page` and pass `approval_url=`; clients that support URL-mode
+elicitation send the person there ([details](adapters/mcp/README.md#approval-page-url-mode)).
+
+For LangGraph, [`sealedplan-langgraph`](adapters/langgraph) turns each action into a tool.
+When a person must approve, the graph pauses with the plan as the interrupt value, and
+resumes only for that plan's hash.
+
+For the OpenAI Agents SDK, [`sealedplan-openai-agents`](adapters/openai-agents) does the
+same with the SDK's tool approvals. The run stops on the call, and `resolve_approvals`
+lets it continue only once the plan is approved in the store.
 
 ### What the outcomes mean
 
@@ -200,6 +210,7 @@ Pass your own `policy=` to `Runtime` to change it.
 |---|---|---|---|---|
 | `sql.update_row` ([source](python/sealedplan/src/sealedplan/providers/sql.py)) | Any DB-API 2.0 driver | REVERSIBLE | Row `version` column, enforced in the `UPDATE ... WHERE` (atomic) | Tables and columns come from an allowlist; values are bound parameters. |
 | `k8s.scale_deployment` ([source](python/sealedplan/src/sealedplan/providers/k8s.py)) | Kubernetes | REVERSIBLE | Deployment `generation`, written with `resourceVersion` (atomic) | Scaling to zero is high risk. Talks to a small `KubeApi` interface; no client is bundled yet. |
+| `http.put_json` ([source](python/sealedplan/src/sealedplan/providers/http.py)) | Any JSON API with `ETag` | COMPENSATABLE | `ETag`, sent as `If-Match` (atomic only where the API enforces it; `check_then_act` unless you pass `atomic=True`) | Replaces an existing document under a fixed `base_url`; no creates. Standard library only, no redirects. Bodies are stored in the plan, so keep secrets out. |
 | `terraform.apply` ([source](python/sealedplan/src/sealedplan/providers/terraform.py)) | Terraform CLI | IRREVERSIBLE | State `lineage/serial`, Terraform's own stale-plan check (atomic) | Approves a saved plan file by digest and applies that file. Destroy or replace is high risk, so two people approve. Sensitive values are redacted. |
 
 For a Terraform stack:
@@ -225,7 +236,9 @@ To write your own action, see
 | [`docs/prior-art.md`](docs/prior-art.md) | Related work and how this differs. |
 | [`python/sealedplan`](python/sealedplan) | Reference runtime (Python 3.11+): core, SQLite store, CLI approver, reference actions. |
 | [`examples/`](examples) | Runnable examples. |
-| [`adapters/mcp`](adapters/mcp) | MCP server adapter (`sealedplan-mcp`). A LangGraph adapter is planned. |
+| [`adapters/mcp`](adapters/mcp) | MCP server adapter (`sealedplan-mcp`). |
+| [`adapters/langgraph`](adapters/langgraph) | LangGraph tools (`sealedplan-langgraph`). |
+| [`adapters/openai-agents`](adapters/openai-agents) | OpenAI Agents SDK tools (`sealedplan-openai-agents`). |
 
 Status: early draft. Expect breaking changes.
 

@@ -15,7 +15,8 @@ parameters. A call never changes the target system directly:
 ``requestState`` holds the plan hash and the plan's expiry. The MCP SDK seals it (AES-GCM)
 and binds it to the tool name, the arguments and the authenticated client (§12.3).
 Approval is read from the runtime's store only: an elicitation ``accept`` is never an
-approval (§12.4).
+approval (§12.4). With ``approval_url`` set, clients that support URL-mode elicitation
+are sent to the approval page (:mod:`sealedplan_mcp.approval_page`).
 """
 
 from __future__ import annotations
@@ -25,6 +26,7 @@ import json
 import threading
 import typing
 import uuid
+import weakref
 from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
 from typing import Any, cast
@@ -35,6 +37,7 @@ from mcp_types import (
     CallToolResult,
     ElicitRequest,
     ElicitRequestFormParams,
+    ElicitRequestURLParams,
     InputRequiredResult,
     TextContent,
     ToolAnnotations,
@@ -52,6 +55,25 @@ SPEC_VERSION = "0.1"
 DEFAULT_APPROVE_HINT = "sealedplan approve {short}"
 
 AgentSource = Principal | Callable[[Context], Principal]
+
+
+_locks: dict[int, threading.Lock] = {}
+_locks_guard = threading.Lock()
+
+
+def runtime_lock(runtime: Runtime) -> threading.Lock:
+    """The lock that serializes use of ``runtime`` within this process.
+
+    The runtime and its SQLite store are synchronous and share one connection; the MCP
+    server and the approval page take this lock around every use. Runtime is an
+    unhashable dataclass, so locks are keyed by id and dropped with it.
+    """
+    with _locks_guard:
+        key = id(runtime)
+        if key not in _locks:
+            _locks[key] = threading.Lock()
+            weakref.finalize(runtime, _locks.pop, key, None)
+        return _locks[key]
 
 
 def tool_name(action_name: str) -> str:
@@ -76,7 +98,8 @@ class PlanApply(Extension):
     ``agent`` is the principal recorded as the plan's agent: a fixed ``Principal``, or a
     function of the MCP request context (for example, derived from the client's token).
     ``approve_hint`` tells the person how to approve; ``{short}`` and ``{plan_hash}``
-    are filled in.
+    are filled in. ``approval_url`` is the approval page for a plan, with the same
+    placeholders; when set, clients that support URL-mode elicitation are sent there.
     """
 
     identifier = EXTENSION_ID
@@ -87,13 +110,14 @@ class PlanApply(Extension):
         *,
         agent: AgentSource,
         approve_hint: str = DEFAULT_APPROVE_HINT,
+        approval_url: str | None = None,
     ) -> None:
         self.runtime = runtime
         self.agent = agent
         self.approve_hint = approve_hint
-        # The runtime and its SQLite store are synchronous; tool calls run on worker
-        # threads, so one call at a time uses them.
-        self._lock = threading.Lock()
+        self.approval_url = approval_url
+        # Tool calls run on worker threads; one call at a time uses the runtime.
+        self._lock = runtime_lock(runtime)
 
     # --- what the extension contributes -----------------------------------------------
 
@@ -106,7 +130,7 @@ class PlanApply(Extension):
         ttl = int(self.runtime.plan_ttl.total_seconds())
         return {
             "spec_version": SPEC_VERSION,
-            "approval_modes": ["out_of_band", "explicit"],
+            "approval_modes": (["url"] if self.approval_url else []) + ["out_of_band", "explicit"],
             "tools": {
                 tool_name(name): {
                     "effect": str(self._effect(bound)),
@@ -238,6 +262,22 @@ class PlanApply(Extension):
         if caps is None or caps.elicitation is None:
             # §12.2: a state-only result lets the client retry without prompting anyone.
             return InputRequiredResult.model_validate({"requestState": state, "_meta": meta})
+        if self.approval_url and caps.elicitation.url is not None:
+            # URL mode (§12.4): the person decides on the approval page, signed in there.
+            # Accepting only means they agreed to open it.
+            url = self.approval_url.format(short=short, plan_hash=plan.plan_hash)
+            page = ElicitRequest(
+                params=ElicitRequestURLParams(
+                    message=(
+                        f"Approval needed: {plan.summary} (plan {short}). Review and decide "
+                        "on the approval page, then continue."
+                    ),
+                    url=url,
+                )
+            )
+            return InputRequiredResult.model_validate(
+                {"inputRequests": {"approval": page}, "requestState": state, "_meta": meta}
+            )
         # Out of band (§12.4): this message only tells the person where to approve.
         # Its answer is ignored; approval comes from the store.
         prompt = ElicitRequest(
@@ -348,6 +388,7 @@ def create_server(
     agent: AgentSource,
     name: str = "sealedplan",
     approve_hint: str = DEFAULT_APPROVE_HINT,
+    approval_url: str | None = None,
     request_state_security: RequestStateSecurity | None = None,
 ) -> MCPServer:
     """An MCP server exposing ``runtime``'s registered actions.
@@ -359,6 +400,8 @@ def create_server(
     ttl = max(runtime.plan_ttl, timedelta(seconds=1)).total_seconds()
     return MCPServer(
         name,
-        extensions=[PlanApply(runtime, agent=agent, approve_hint=approve_hint)],
+        extensions=[
+            PlanApply(runtime, agent=agent, approve_hint=approve_hint, approval_url=approval_url)
+        ],
         request_state_security=request_state_security or RequestStateSecurity.ephemeral(ttl=ttl),
     )

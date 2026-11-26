@@ -261,6 +261,15 @@ class SqliteStore:
             ).fetchall()
         return [self._record(r) for r in rows]
 
+    def by_idempotency_key(self, action_name: str, idempotency_key: str) -> list[PlanRecord]:
+        """Plans for ``action_name`` that share ``idempotency_key``, oldest first."""
+        rows = self._conn.execute(
+            "SELECT * FROM plans WHERE action_name = ? AND idempotency_key = ?"
+            " ORDER BY created_at, rowid",
+            (action_name, idempotency_key),
+        ).fetchall()
+        return [self._record(r) for r in rows]
+
     def in_flight(self) -> list[PlanRecord]:
         return self.list_plans(IN_FLIGHT)
 

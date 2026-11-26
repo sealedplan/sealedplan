@@ -12,6 +12,10 @@ classifiers = [
     "Typing :: Typed",
 ]
 
+[project.optional-dependencies]
+# Signed approvals (sealedplan.signing): detached JWS, Ed25519 or P-256.
+signing = ["pyjwt[crypto]>=2.10,<3"]
+
 [project.scripts]
 sealedplan = "sealedplan.cli:main"
 

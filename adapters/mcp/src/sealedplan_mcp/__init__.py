@@ -5,6 +5,7 @@ from sealedplan_mcp.server import (
     SPEC_VERSION,
     PlanApply,
     create_server,
+    runtime_lock,
     tool_annotations,
     tool_name,
 )
@@ -14,6 +15,7 @@ __all__ = [
     "SPEC_VERSION",
     "PlanApply",
     "create_server",
+    "runtime_lock",
     "tool_annotations",
     "tool_name",
 ]
