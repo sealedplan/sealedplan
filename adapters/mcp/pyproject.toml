@@ -5,7 +5,7 @@ description = "Serve sealedplan actions as MCP tools: plan, approve the plan has
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.11"
-dependencies = ["sealedplan", "mcp>=2.3,<3"]
+dependencies = ["sealedplan", "mcp>=2.3,<3", "starlette>=0.48"]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
     "Programming Language :: Python :: 3",

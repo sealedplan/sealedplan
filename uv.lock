@@ -1918,12 +1918,14 @@ source = { editable = "adapters/mcp" }
 dependencies = [
     { name = "mcp" },
     { name = "sealedplan" },
+    { name = "starlette" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "mcp", specifier = ">=2.3,<3" },
     { name = "sealedplan", editable = "python/sealedplan" },
+    { name = "starlette", specifier = ">=0.48" },
 ]
 
 [[package]]

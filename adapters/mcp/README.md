@@ -31,6 +31,40 @@ saying how to approve. Answering that message is **not** an approval: the server
 approvals only from its own store. A client without elicitation gets a state-only
 `input_required` and retries on its own.
 
+## Approval page (URL mode)
+
+The recommended channel (SPEC §12.4): the person decides on a web page where they sign
+in, not in the agent's client. Serve the page and tell the MCP server where it is:
+
+```python
+from sealedplan_mcp import create_server
+from sealedplan_mcp.approval_page import approval_app
+
+
+def identity(request):  # your sign-in, e.g. a header your proxy verified
+    user = request.headers.get("x-verified-user")
+    return Principal(id=user, issuer="https://idp.example.com", kind="human") if user else None
+
+
+page = approval_app(rt, authenticate=identity, secret=PAGE_SECRET)  # a Starlette app
+server = create_server(
+    rt, agent=AGENT, approval_url="https://approve.example.com/plans/{plan_hash}"
+)
+```
+
+A client that supports URL-mode elicitation is sent to `approval_url` for the plan.
+Opening it is still not an approval. The page shows the stored, hash-verified plan as
+`sealedplan show` prints it, and records the person's approve or reject in the store
+with `method: "url"`. Then the client's retry applies.
+
+- The page never decides who the person is: `authenticate` returns the approver, or
+  `None` to refuse. Only `kind="human"` principals may decide.
+- Forms carry a token bound to the person and the plan, keyed by `secret`. Without a
+  secret, a random key is made per process; pass one when you run several replicas.
+- Serve the page and the MCP server from one process: they share the runtime and lock
+  around it (`runtime_lock`).
+- Clients without URL mode get the out-of-band message, which names `approve_hint`.
+
 ## Explicit mode
 
 An agent that knows the extension can ask for a plan first:

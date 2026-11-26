@@ -167,7 +167,9 @@ create_server(rt, agent=AGENT).run()
 
 See [`examples/mcp_server`](examples/mcp_server/crm_server.py), and
 [`examples/agent_sdk`](examples/agent_sdk/crm_assistant.py) for a Claude Agent SDK agent
-that uses it.
+that uses it. To let people approve on a web page where they sign in, serve
+`sealedplan_mcp.approval_page` and pass `approval_url=`; clients that support URL-mode
+elicitation send the person there ([details](adapters/mcp/README.md#approval-page-url-mode)).
 
 For LangGraph, [`sealedplan-langgraph`](adapters/langgraph) turns each action into a tool.
 When a person must approve, the graph pauses with the plan as the interrupt value, and
