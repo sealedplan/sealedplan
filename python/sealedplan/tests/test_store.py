@@ -185,6 +185,16 @@ def test_idempotency_key_blocks_second_apply(store: SqliteStore) -> None:
     assert info.value.other_state is State.APPLYING
 
 
+def test_plans_by_idempotency_key(store: SqliteStore) -> None:
+    first, second = make_plan(), make_plan(summary="same request, re-planned")
+    other = make_plan(idempotency_key="another-request")
+    for p in (first, second, other):
+        store.create_plan(p, Effect.REVERSIBLE, p.principal.agent, T0)
+    found = store.by_idempotency_key(first.action.name, first.idempotency_key)
+    assert [r.plan.plan_hash for r in found] == [first.plan_hash, second.plan_hash]
+    assert store.by_idempotency_key("no.such_action", first.idempotency_key) == []
+
+
 def test_failed_apply_frees_idempotency_key(store: SqliteStore) -> None:
     first, second = make_plan(), make_plan(summary="same request, re-planned")
     _approved(store, first, "appr-1")

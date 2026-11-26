@@ -167,7 +167,11 @@ create_server(rt, agent=AGENT).run()
 
 See [`examples/mcp_server`](examples/mcp_server/crm_server.py), and
 [`examples/agent_sdk`](examples/agent_sdk/crm_assistant.py) for a Claude Agent SDK agent
-that uses it. A LangGraph adapter is planned.
+that uses it.
+
+For LangGraph, [`sealedplan-langgraph`](adapters/langgraph) turns each action into a tool.
+When a person must approve, the graph pauses with the plan as the interrupt value, and
+resumes only for that plan's hash.
 
 ### What the outcomes mean
 
@@ -225,7 +229,8 @@ To write your own action, see
 | [`docs/prior-art.md`](docs/prior-art.md) | Related work and how this differs. |
 | [`python/sealedplan`](python/sealedplan) | Reference runtime (Python 3.11+): core, SQLite store, CLI approver, reference actions. |
 | [`examples/`](examples) | Runnable examples. |
-| [`adapters/mcp`](adapters/mcp) | MCP server adapter (`sealedplan-mcp`). A LangGraph adapter is planned. |
+| [`adapters/mcp`](adapters/mcp) | MCP server adapter (`sealedplan-mcp`). |
+| [`adapters/langgraph`](adapters/langgraph) | LangGraph tools (`sealedplan-langgraph`). |
 
 Status: early draft. Expect breaking changes.
 

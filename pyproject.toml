@@ -3,7 +3,7 @@ name = "sealedplan-workspace"
 version = "0.0.0"
 description = "Development workspace for the sealedplan monorepo"
 requires-python = ">=3.11"
-dependencies = ["sealedplan", "sealedplan-mcp"]
+dependencies = ["sealedplan", "sealedplan-mcp", "sealedplan-langgraph"]
 
 [dependency-groups]
 dev = [
@@ -21,16 +21,17 @@ agent-sdk = ["claude-agent-sdk>=0.2.187,<0.3"]
 package = false
 
 [tool.uv.workspace]
-members = ["python/sealedplan", "adapters/mcp"]
+members = ["python/sealedplan", "adapters/mcp", "adapters/langgraph"]
 
 [tool.uv.sources]
 sealedplan = { workspace = true }
 sealedplan-mcp = { workspace = true }
+sealedplan-langgraph = { workspace = true }
 
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-src = ["python/sealedplan/src", "python/sealedplan/tests", "adapters/mcp/src", "adapters/mcp/tests"]
+src = ["python/sealedplan/src", "python/sealedplan/tests", "adapters/mcp/src", "adapters/mcp/tests", "adapters/langgraph/src", "adapters/langgraph/tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF", "N", "S", "PT", "TID"]
@@ -48,6 +49,8 @@ files = [
     "python/sealedplan/tests",
     "adapters/mcp/src",
     "adapters/mcp/tests",
+    "adapters/langgraph/src",
+    "adapters/langgraph/tests",
     "examples",
 ]
 
@@ -67,5 +70,9 @@ init_typed = true
 warn_required_dynamic_aliases = true
 
 [tool.pytest.ini_options]
-testpaths = ["python/sealedplan/tests", "adapters/mcp/tests"]
+testpaths = ["python/sealedplan/tests", "adapters/mcp/tests", "adapters/langgraph/tests"]
+filterwarnings = [
+    # langsmith (via langgraph) calls a function Python 3.14 deprecates; not ours to fix.
+    "ignore:'asyncio.iscoroutinefunction' is deprecated:DeprecationWarning:langsmith",
+]
 addopts = "-q --strict-markers"
