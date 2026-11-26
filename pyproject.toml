@@ -12,6 +12,7 @@ dev = [
     "ruff>=0.6",
     "mypy>=1.11",
     "jsonschema>=4.26",  # validates runtime output against spec/schemas
+    "rfc8785>=0.1.4",  # independent JCS, cross-checks spec/test-vectors
 ]
 # Opt in with `uv sync --group agent-sdk`; only examples/agent_sdk needs it.
 agent-sdk = ["claude-agent-sdk>=0.2.187,<0.3"]

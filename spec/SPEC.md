@@ -404,8 +404,9 @@ hashes. Implementations MUST pass them:
 - For each `invalid` case, a receiver rejects `text`. Each case breaks one rule and
   names it in `reason`.
 
-The reference implementation produces the file. It has not yet been checked against an
-independent JCS implementation.
+The reference implementation produces the file. Its test suite also checks every
+`valid` case against an independent JCS implementation
+([`rfc8785`](https://github.com/trailofbits/rfc8785.py)).
 
 ## 7. State machine
 
@@ -883,22 +884,26 @@ the A2A extension URI change with every major version.
   a page in this repository. A domain the project owns would be more durable; moving
   to one would be a major version change (§15). Media types
   `application/vnd.sealedplan.*+json` are unregistered vendor types.
-- **Q2 — `principal` in the hash.** Included in this draft: an approval is for *this*
-  agent to do *this*. The cost is that the same change from two agents needs two
-  approvals.
-- **Q3 — `summary` in the hash.** Included, so the text the approver read can't be
-  swapped. The alternative is to exclude it and render only structured fields.
-- **Q4 — Run-level approval.** Should a run get its own hash over its step hashes, so a
-  reviewer approves a whole remediation once?
+- **Q2 — `principal` in the hash.** *Resolved: included.* An approval is for *this*
+  agent to do *this*; without the principal, any other agent could reuse it. The cost
+  is that the same change from two agents needs two approvals.
+- **Q3 — `summary` in the hash.** *Resolved: included*, so the text the approver read
+  can't be swapped after approval.
+- **Q4 — Run-level approval.** *Deferred to v0.2.* Should a run get its own hash over
+  its step hashes, so a reviewer approves a whole remediation once? It needs a new hash
+  and rules for a step that drifts. In v0.1 each step is approved, and an approval UI
+  MAY show the steps together (§9.2).
 - **Q5 — Standing approvals.** `scope.uses > 1`, or approvals that match a class of
   plans ("any REVERSIBLE scale in namespace X today"). Deferred, because it weakens hash
   binding.
-- **Q6 — Edit.** LangChain HITL lets reviewers edit a call. Here an edit must be a
-  re-plan with a new hash. Is that acceptable UX?
+- **Q6 — Edit.** *Resolved: an edit is a re-plan.* LangChain HITL lets reviewers edit
+  a call. Here an edited plan would be one the target system never produced, so an edit
+  goes back to the provider and gets a new hash. An approval UI MAY offer "edit and
+  re-plan".
 - **Q7 — MCP `Tool._meta`.** If confirmed for 2026-07-28, per-tool declarations could
   move from the capability map onto each tool.
 - **Q8 — Signature format.** Detached JWS is proposed. COSE, or plain Ed25519 over JCS
   bytes, are alternatives.
 - **Q9 — JSON Schemas.** *Resolved.* Schemas are in [`schemas/`](schemas) and hash test
-  vectors in [`test-vectors/`](test-vectors) (§6.4). Still open: checking the vectors
-  against an independent JCS implementation.
+  vectors in [`test-vectors/`](test-vectors) (§6.4), checked against an independent JCS
+  implementation.

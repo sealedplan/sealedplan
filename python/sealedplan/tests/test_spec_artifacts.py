@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
 from typing import Any
 
 import pytest
+import rfc8785
 from jsonschema import Draft202012Validator
 from referencing import Registry, Resource
 
@@ -57,6 +59,14 @@ def test_valid_vector(case: dict[str, Any]) -> None:
     assert digest(body) == case["plan_hash"] == case["plan"]["plan_hash"]
     assert parse_plan(json.dumps(case["plan"])).plan_hash == case["plan_hash"]
     assert errors("plan", case["plan"]) == []
+
+
+@pytest.mark.parametrize("case", VECTORS["valid"], ids=lambda c: c["name"])
+def test_valid_vector_matches_an_independent_jcs(case: dict[str, Any]) -> None:
+    body = {k: v for k, v in case["plan"].items() if k != "plan_hash"}
+    canonical = rfc8785.dumps(body)
+    assert canonical == case["canonical"].encode("utf-8")
+    assert "sha256:" + hashlib.sha256(canonical).hexdigest() == case["plan_hash"]
 
 
 @pytest.mark.parametrize("case", VECTORS["invalid"], ids=lambda c: c["name"])
