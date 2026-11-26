@@ -210,6 +210,7 @@ Pass your own `policy=` to `Runtime` to change it.
 |---|---|---|---|---|
 | `sql.update_row` ([source](python/sealedplan/src/sealedplan/providers/sql.py)) | Any DB-API 2.0 driver | REVERSIBLE | Row `version` column, enforced in the `UPDATE ... WHERE` (atomic) | Tables and columns come from an allowlist; values are bound parameters. |
 | `k8s.scale_deployment` ([source](python/sealedplan/src/sealedplan/providers/k8s.py)) | Kubernetes | REVERSIBLE | Deployment `generation`, written with `resourceVersion` (atomic) | Scaling to zero is high risk. Talks to a small `KubeApi` interface; no client is bundled yet. |
+| `http.put_json` ([source](python/sealedplan/src/sealedplan/providers/http.py)) | Any JSON API with `ETag` | COMPENSATABLE | `ETag`, sent as `If-Match` (atomic only where the API enforces it; `check_then_act` unless you pass `atomic=True`) | Replaces an existing document under a fixed `base_url`; no creates. Standard library only, no redirects. Bodies are stored in the plan, so keep secrets out. |
 | `terraform.apply` ([source](python/sealedplan/src/sealedplan/providers/terraform.py)) | Terraform CLI | IRREVERSIBLE | State `lineage/serial`, Terraform's own stale-plan check (atomic) | Approves a saved plan file by digest and applies that file. Destroy or replace is high risk, so two people approve. Sensitive values are redacted. |
 
 For a Terraform stack:
